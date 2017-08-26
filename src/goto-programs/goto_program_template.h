@@ -162,6 +162,7 @@ public:
     codeT code;
 
     /// The function this instruction belongs to
+    /// WILL GO AWAY
     irep_idt function;
 
     /// The location of the instruction in the source file
@@ -177,36 +178,27 @@ public:
     /// The target for gotos and for start_thread nodes
     typedef typename std::list<instructiont>::iterator targett;
     typedef typename std::list<instructiont>::const_iterator const_targett;
-    typedef std::list<targett> targetst;
-    typedef std::list<const_targett> const_targetst;
 
-    /// The list of successor instructions
-    targetst targets;
+    /// The branch target
+    targett target;
 
-    /// Returns the first (and only) successor for the usual case of a single
-    /// target
     targett get_target() const
     {
-      assert(targets.size()==1);
-      return targets.front();
+      return target;
     }
 
-    /// Sets the first (and only) successor for the usual case of a single
-    /// target
     void set_target(targett t)
     {
-      targets.clear();
-      targets.push_back(t);
+      target=t;
     }
 
     /// Goto target labels
+    /// will go away
     typedef std::list<irep_idt> labelst;
     labelst labels;
 
-    // will go away
-    std::set<targett> incoming_edges;
-
     /// Is this node a branch target?
+    /// will go away
     bool is_target() const
     { return target_number!=nil_target; }
 
@@ -214,7 +206,6 @@ public:
     void clear(goto_program_instruction_typet _type)
     {
       type=_type;
-      targets.clear();
       guard=true_exprt();
       code.make_nil();
     }
@@ -238,7 +229,7 @@ public:
     void make_goto(targett _target)
     {
       make_goto();
-      targets.push_back(_target);
+      set_target(_target);
     }
 
     void make_goto(targett _target, const guardT &g)
@@ -295,7 +286,7 @@ public:
       swap(instruction.source_location, source_location);
       swap(instruction.type, type);
       swap(instruction.guard, guard);
-      swap(instruction.targets, targets);
+      swap(instruction.target, target);
       swap(instruction.function, function);
     }
 
@@ -328,9 +319,8 @@ public:
       if(!is_goto())
         return false;
 
-      for(const auto &t : targets)
-        if(t->location_number<=location_number)
-          return true;
+      if(target->location_number<=location_number)
+        return true;
 
       return false;
     }
