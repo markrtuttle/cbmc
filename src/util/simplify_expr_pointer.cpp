@@ -10,7 +10,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
-#include "c_types.h"
 #include "expr.h"
 #include "namespace.h"
 #include "std_expr.h"

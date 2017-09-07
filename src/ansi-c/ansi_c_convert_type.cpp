@@ -10,10 +10,10 @@ Author: Daniel Kroening, kroening@kroening.com
 /// SpecC Language Conversion
 
 #include "ansi_c_convert_type.h"
+#include "c_types.h"
 
 #include <cassert>
 
-#include <util/c_types.h>
 #include <util/namespace.h>
 #include <util/simplify_expr.h>
 #include <util/config.h>

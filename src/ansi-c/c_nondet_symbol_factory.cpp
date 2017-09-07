@@ -10,12 +10,12 @@ Author: DiffBlue Limited. All rights reserved.
 /// C Nondet Symbol Factory
 
 #include "c_nondet_symbol_factory.h"
+#include "c_types.h"
 
 #include <set>
 #include <sstream>
 
 #include <util/arith_tools.h>
-#include <util/c_types.h>
 #include <util/fresh_symbol.h>
 #include <util/std_types.h>
 #include <util/std_code.h>

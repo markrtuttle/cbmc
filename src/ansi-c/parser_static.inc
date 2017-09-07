@@ -1,4 +1,3 @@
-#include <util/c_types.h>
 #include <util/std_code.h>
 #include <util/std_types.h>
 #include <util/std_expr.h>

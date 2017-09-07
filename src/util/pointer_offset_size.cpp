@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <cassert>
 
-#include "c_types.h"
 #include "expr.h"
 #include "arith_tools.h"
 #include "std_types.h"

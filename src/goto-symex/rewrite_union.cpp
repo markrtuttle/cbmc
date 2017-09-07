@@ -18,8 +18,6 @@ Author: Daniel Kroening, kroening@kroening.com
 
 #include <goto-programs/goto_model.h>
 
-#include <util/c_types.h>
-
 static bool have_to_rewrite_union(
   const exprt &expr,
   const namespacet &ns)

@@ -13,7 +13,6 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 #include <util/source_location.h>
 #include <util/simplify_expr.h>
-#include <util/c_types.h>
 #include <util/config.h>
 
 #include <ansi-c/c_qualifiers.h>

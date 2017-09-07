@@ -19,7 +19,6 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 #include <util/arith_tools.h>
 #include <util/prefix.h>
 
-#include <util/c_types.h>
 #include <ansi-c/string_constant.h>
 #include <ansi-c/anonymous_member.h>
 

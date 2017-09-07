@@ -3,7 +3,6 @@ SRC = arith_tools.cpp \
       base_type.cpp \
       bv_arithmetic.cpp \
       byte_operators.cpp \
-      c_types.cpp \
       cmdline.cpp \
       config.cpp \
       cout_message.cpp \

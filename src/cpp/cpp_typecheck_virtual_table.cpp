@@ -11,7 +11,6 @@ Author: Daniel Kroening, kroening@cs.cmu.edu
 
 #include "cpp_typecheck.h"
 
-#include <util/c_types.h>
 #include <util/std_expr.h>
 
 void cpp_typecheckt::do_virtual_table(const symbolt &symbol)

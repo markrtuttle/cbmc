@@ -7,10 +7,10 @@ Author: Daniel Kroening, kroening@kroening.com
 \*******************************************************************/
 
 
-#ifndef CPROVER_UTIL_C_TYPES_H
-#define CPROVER_UTIL_C_TYPES_H
+#ifndef CPROVER_ANSI_C_C_TYPES_H
+#define CPROVER_ANSI_C_C_TYPES_H
 
-#include "std_types.h"
+#include <util/std_types.h>
 
 bitvector_typet index_type();
 bitvector_typet enum_constant_type();
