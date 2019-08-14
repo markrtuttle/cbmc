@@ -9,10 +9,10 @@ jobs:
       addons:
         apt:
           packages:
-            - python
-            - python-pip
+            - python3
+            - python3-pip
       install:
-        pip install future lxml
+        pip3 install future lxml
       script:
         make -C regression/cbmc-viewer test
       before_cache:
