@@ -10,7 +10,7 @@ jobs:
         apt:
           packages:
             - python
-	    - python-pip
+            - python-pip
       install:
         pip install future lxml
       script:
