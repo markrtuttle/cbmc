@@ -14,6 +14,8 @@ jobs:
       install:
         pip3 install lxml
       script:
+        which goto-cc
+	which cbmc
         make -C regression/cbmc-viewer test
       before_cache:
 
