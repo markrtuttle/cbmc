@@ -3,23 +3,6 @@ language: cpp
 jobs:
   include:
 
-    - &cbmc-viewer-stage
-      stage: Linter + Doxygen + non-debug Ubuntu/gcc-5 test
-      env: NAME="cbmc-viewer"
-      addons:
-        apt:
-          packages:
-            - python3
-            - python3-pip
-      install:
-        pip3 install lxml
-      script:
-        which goto-cc
-        which cbmc
-        make -C regression/cbmc-viewer test
-      before_cache:
-
-
     - &formatting-stage
       stage: Linter + Doxygen + non-debug Ubuntu/gcc-5 test
       env: NAME="clang-format"
@@ -120,6 +103,8 @@ jobs:
             - parallel
             - jq
             - gdb
+            - python3.7
+            - python3-pip
       before_install:
         - mkdir bin
         - ln -s /usr/bin/gcc-5 bin/gcc
@@ -136,7 +121,7 @@ jobs:
       compiler: clang
       cache: ccache
       before_install:
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache parallel gdb
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache parallel gdb python
         - export PATH=$PATH:/usr/local/opt/ccache/libexec
       env:
         - COMPILER="ccache clang++"
@@ -246,6 +231,8 @@ jobs:
           sources:
             - ubuntu-toolchain-r-test
           packages:
+            - python3.7
+            - python3-pip
             - g++-7
             - jq
             - gdb
@@ -254,12 +241,14 @@ jobs:
         - ln -s /usr/bin/gcc-7 bin/gcc
         - ln -s /usr/bin/g++-7 bin/g++
       install:
+        - pip3 install lxml
         - ccache -z
         - ccache --max-size=1G
         - cmake -H. -Bbuild '-DCMAKE_BUILD_TYPE=Release'  '-DCMAKE_CXX_COMPILER=/usr/bin/g++-7' '-DCMAKE_USE_CUDD=true' -DCMAKE_CXX_FLAGS="-DBDD_GUARDS" '-DWITH_MEMORY_ANALYZER=On'
         - git submodule update --init --recursive
         - cmake --build build -- -j4
       script: (cd build; ctest -V -L CORE -j2)
+
 
     # cmake build using clang++-6
     - stage: Test different OS/CXX/Flags
@@ -284,6 +273,8 @@ jobs:
             - parallel
             - jq
             - gdb
+            - python3.7
+            - python3-pip
       before_install:
         - mkdir bin
         # Use gcc/g++ 5 for tests, as Clang doesn't work yet
@@ -291,6 +282,7 @@ jobs:
         - ln -s /usr/bin/gcc-5 bin/gcc-5
         - ln -s /usr/bin/g++-5 bin/g++-5
       install:
+        - pip3 install lxml
         - ccache -z
         - ccache --max-size=1G
         - cmake -H. -Bbuild '-DCMAKE_BUILD_TYPE=Release' '-DCMAKE_CXX_COMPILER=/usr/bin/clang++-7' '-DCMAKE_CXX_FLAGS=-Qunused-arguments' '-DWITH_MEMORY_ANALYZER=On'
@@ -305,12 +297,13 @@ jobs:
       compiler: clang
       cache: ccache
       before_install:
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache gdb
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install ccache gdb python
         - export PATH=$PATH:/usr/local/opt/ccache/libexec
       env:
         - BUILD_SYSTEM=cmake
         - CCACHE_CPP2=yes
       install:
+        - pip3 install lxml
         - ccache -z
         - ccache --max-size=1G
         - cmake -H. -Bbuild '-DCMAKE_BUILD_TYPE=Release' '-DCMAKE_OSX_ARCHITECTURES=x86_64'
@@ -355,6 +348,7 @@ jobs:
       script: echo "This is coverity build. No need for tests."
 
 install:
+  - pip3 install lxml
   - ccache -z
   - ccache --max-size=1G
   - make -C jbmc/src setup-submodules
