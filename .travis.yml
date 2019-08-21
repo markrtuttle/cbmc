@@ -144,6 +144,8 @@ jobs:
             - libubsan0
             - jq
             - gdb
+            - python3
+            - python3-pip
       before_install:
         - mkdir bin
         - ln -s /usr/bin/gcc-5 bin/gcc
@@ -175,6 +177,8 @@ jobs:
             - libubsan0
             - jq
             - gdb
+            - python3
+            - python3-pip
       before_install:
         - mkdir bin
         - ln -s /usr/bin/gcc-5 bin/gcc
@@ -205,6 +209,8 @@ jobs:
             - g++-7
             - jq
             - gdb
+            - python3
+            - python3-pip
       before_install:
         - mkdir bin
         - ln -s /usr/bin/gcc-7 bin/gcc
@@ -231,11 +237,11 @@ jobs:
           sources:
             - ubuntu-toolchain-r-test
           packages:
-            - python3
-            - python3-pip
             - g++-7
             - jq
             - gdb
+            - python3
+            - python3-pip
       before_install:
         - mkdir bin
         - ln -s /usr/bin/gcc-7 bin/gcc
@@ -327,6 +333,8 @@ jobs:
           packages:
             - libwww-perl
             - g++-5
+            - python3
+            - python3-pip
         coverity_scan:
           project:
             name: "diffblue/cbmc"
