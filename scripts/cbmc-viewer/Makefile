@@ -1,7 +1,7 @@
 ################################################################
 
 pylint:
-	-pylint cbmc-viewer *.py \
+	-pylint cbmc-viewer *.py source-files \
 		--disable=duplicate-code,invalid-name
 
 ################################################################

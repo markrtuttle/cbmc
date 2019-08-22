@@ -14,7 +14,7 @@ class Markup:
     """Mark up the source tree and links into the source tree."""
 
     def __init__(self, tags, coverage,
-                 srcdir=".", htmldir="html", srcfilter=""):
+                 srcdir=".", htmldir="html", srcfilter="", sources=None):
         """Initialize marking up the source tree."""
         # pylint: disable=too-many-arguments
         self.tags = tags
@@ -22,6 +22,7 @@ class Markup:
         self.srcdir = srcdir.rstrip('/')
         self.htmldir = htmldir.rstrip('/')
         self.srcfilter = srcfilter
+        self.sources = sources
 
     @staticmethod
     def src_html(src):
@@ -183,7 +184,8 @@ class Markup:
             if e.errno != errno.EEXIST:
                 raise
 
-        for src in source_files(self.srcdir, self.srcfilter):
+        #for src in source_files(self.srcdir, self.srcfilter):
+        for src in self.sources.files():
             if src == '':
                 continue
             if src[0] == '/':
