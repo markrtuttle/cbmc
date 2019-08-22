@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+
+# -*- mode: python-mode -*-
+
+#pylint: disable=missing-docstring
+
+import argparse
+import logging
+
+import symbolst
+
+################################################################
+
+def parse_arguments():
+    """Parse command line options."""
+
+    parser = argparse.ArgumentParser(
+        description='Collect symbol definitions from a project'
+    )
+    parser.add_argument(
+        '--srcdir',
+        default='.',
+        metavar='DIR',
+        help='Root of the source tree'
+    )
+    parser.add_argument(
+        '--srcexclude',
+        metavar='RE',
+        help='Regular expression for source file to exclude from scan'
+    )
+    parser.add_argument(
+        '--srcfiles',
+        metavar='JSON',
+        help='A json file listing source files to scan.'
+    )
+    parser.add_argument(
+        '--ctags',
+        default='ctags',
+        metavar='TAGS',
+        help='Name of the ctags program'
+    )
+    parser.add_argument(
+        '--output',
+        metavar='FILE',
+        help='Write symbol definitions to file'
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debugging output'
+    )
+
+    args = parser.parse_args()
+    return args
+
+################################################################
+
+def main():
+    args = parse_arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+    if args.output:
+        symbolst.write_symbols(args.srcdir, args.srcexclude, args.srcfiles,
+                               args.output)
+    else:
+        symbolst.print_symbols(args.srcdir, args.srcexclude, args.srcfiles)
+
+if __name__ == "__main__":
+    main()

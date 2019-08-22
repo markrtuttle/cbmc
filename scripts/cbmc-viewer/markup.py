@@ -13,11 +13,11 @@ import linestatus
 class Markup:
     """Mark up the source tree and links into the source tree."""
 
-    def __init__(self, tags, coverage,
+    def __init__(self, symbols, coverage,
                  srcdir=".", htmldir="html", srcfilter="", sources=None):
         """Initialize marking up the source tree."""
         # pylint: disable=too-many-arguments
-        self.tags = tags
+        self.symbols = symbols
         self.coverage = coverage
         self.srcdir = srcdir.rstrip('/')
         self.htmldir = htmldir.rstrip('/')
@@ -49,12 +49,12 @@ class Markup:
     def link_symbol(self, symbol, depth=0, color=None, target=None, text=None):
         """Link a symbol to its definition."""
         # pylint: disable=too-many-arguments
-        val = self.tags.lookup(symbol)
+        val = self.symbols.lookup(symbol)
         if not val:
             return symbol
 
         text = text or symbol
-        (src, line) = val[0]
+        (src, line) = val
         return self.link_to_line(text, src, line, depth, color, target)
 
     def link_file(self, src, depth=0, color=None):
