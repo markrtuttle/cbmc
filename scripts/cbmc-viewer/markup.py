@@ -8,7 +8,7 @@ import re
 import errno
 
 import linestatus
-
+import comment
 
 class Markup:
     """Mark up the source tree and links into the source tree."""
@@ -103,16 +103,6 @@ class Markup:
                 loc[func_text_end:line_text_start] + line_link +
                 loc[line_text_end:])
 
-    def markup_line(self, line, depth=0, color=None):
-        """Mark up a source line with links to symbol definitions."""
-        line = line.rstrip()
-        line = untabify(line)
-        line = html.escape(line, quote=False)
-        tokens = re.split('([_a-zA-Z][_a-zA-Z0-9]*)', line)
-        links = [self.link_symbol(tkn, depth, color) for tkn in tokens]
-        newline = "".join(links)
-        return newline
-
     def markup_file(self, indir, infile, outfile, depth, coverage):
         """Mark up a source file with links to symbol definitions."""
         # pylint: disable=too-many-arguments
@@ -144,22 +134,32 @@ class Markup:
             filename = filename[len(indir):]
             filename = filename.lstrip('/')
 
-        html_header(outfh, filename)
+        contents = html.escape(infh.read(), quote=False)
+        segments = comment.parse(contents)
+        def markup_symbol(symbol, depth):
+            val = self.symbols.lookup(symbol)
+            if not val:
+                return symbol
+            (src, line) = val
+            return '<a href="{}/{}#{}">{}</a>'.format(
+                directory_ancestor(depth), self.src_html(src), line, symbol)
+        def markup_segment(segment, depth):
+            if not comment.code_start(segment):
+                return segment
+            tokens = re.split('([_a-zA-Z][_a-zA-Z0-9]*)', segment)
+            return "".join([markup_symbol(token, depth) for token in tokens])
+        markedup_segments = [markup_segment(segment, depth)
+                             for segment in segments]
+        markedup_contents = "".join(markedup_segments).splitlines()
+
+        html_header(outfh, filename, depth)
         lineno = 0
-        for line in infh:
+        for line in markedup_contents:
             lineno += 1
             ls = coverage.get(lineno) if coverage else None
-            if ls is None:
-                color = None
-            elif ls == linestatus.HIT:
-                color = "green"
-            elif ls == linestatus.MISSED:
-                color = "red"
-            elif ls == linestatus.PARTIAL:
-                color = "orange"
-            line = self.markup_line(line, depth, color)
+            line = untabify(line).rstrip()
             try:
-                html_line(outfh, line, lineno, color)
+                html_line(outfh, line, lineno, ls)
             except UnicodeEncodeError:
                 print("UnicodeEncodeError:")
                 print("file: {}".format(infile))
@@ -184,7 +184,7 @@ class Markup:
             if e.errno != errno.EEXIST:
                 raise
 
-        #for src in source_files(self.srcdir, self.srcfilter):
+        html_css(self.htmldir)
         for src in self.sources.files():
             if src == '':
                 continue
@@ -281,10 +281,14 @@ def source_files(srcdir, srcfilter=""):
 ################################################################
 
 
-def html_header(fp, title):
+def html_header(fp, title, depth=0):
     """Write the html header to a file."""
     fp.write("<html>\n")
-    fp.write("<head><title>"+title+"</title></head>\n")
+    fp.write("<head>\n")
+    fp.write("<title>"+title+"</title>\n")
+    fp.write('<link rel="stylesheet" href="{}/style.css">\n'
+             .format(directory_ancestor(depth)))
+    fp.write("</head>\n")
     fp.write("<body><pre>\n")
 
 
@@ -293,7 +297,7 @@ def html_footer(fp):
     fp.write("</pre></body>\n</html>\n")
 
 
-def html_line(fp, line, lineno, color=None):
+def html_line(fp, line, lineno, ls=None):
     """Write the annotated source line to an html file.
 
     Args:
@@ -304,10 +308,37 @@ def html_line(fp, line, lineno, color=None):
         tags (obj): the Tags object for the source tree
         color (str): the desired color for the source line
     """
-    color = None if not color else color
-    color = None if color == 'black' else color
-    style = ' style="color:{}"'.format(color) if color else ''
-    fp.write('<span id="{lineno}"{style}>{lineno:5} {line}</span>\n'.
-             format(lineno=lineno, style=style, line=line))
+    class_map = {
+        linestatus.HIT: ' class="hit"',
+        linestatus.MISSED: ' class="missed"',
+        linestatus.PARTIAL: ' class="partial"'
+        }
+    fp.write('<span id="{lineno}"{cls}>{lineno:5} {line}</span>\n'.
+             format(lineno=lineno, cls=class_map.get(ls, ''), line=line))
+
+css = """
+.hit,
+.hit a
+{
+    color: green;
+}
+
+.missed,
+.missed a
+{
+    color: red;
+}
+
+.partial,
+.partial a
+{
+    color: orange;
+}
+"""
+
+def html_css(root):
+    """Write style file into the root html directory."""
+    with open('{}/style.css'.format(root), 'w') as cssfile:
+        cssfile.write(css)
 
 ################################################################
