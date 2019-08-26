@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
+# Use emacs python mode
 # -*- mode: python-mode -*-
 
-"""Gather names of source files used to buid a goto binary."""
+"""List the source files used to buid a goto binary."""
 
 import json
 import argparse
 import logging
+import os
+import platform
 
 import make_sources
 
@@ -17,27 +20,39 @@ def create_parser():
     """Build the command line parser."""
 
     parser = argparse.ArgumentParser(
-        description='Scan a cbmc project for source files.')
+        description='List the source files used to build a goto binary.')
 
     parser.add_argument(
-        '--builddir',
-        metavar='DIR',
-        default='.',
+        '--blddir',
+        metavar='BLD',
         help="""
 	The build directory.
-	The command "make GOTO_CC=goto-cc cbmc"
-        in this directory should build the cbmc goto binary.
+        If this flag is specified, construct the list of source files
+	using the goto-cc preprocessor.  The command "make
+	GOTO_CC=goto-cc goto" in this directory should build the cbmc
+	goto binary, and the output written to stdout by the build
+	process should include every invocation of goto-cc in the
+	build.  If this flag is not specified, construct the list of
+	source files by listing files under the root of the source tree.
 	"""
     )
     parser.add_argument(
         '--srcdir',
-        metavar='DIR',
-        default='.',
+        metavar='SRC',
         help="""
         The root of the source tree.
-        The build directory is usually under the root
-        of the source tree,
-        but it doesn't have to be.
+        The build directory is usually under the root of the source
+        tree, but it doesn't have to be.
+        """
+    )
+    parser.add_argument(
+        '--srcexclude',
+        metavar='RE',
+        help="""
+        A regular expression matching source files that should be
+        excluded from the list of source files.  This is used only
+        when BLD is not specified and the list of source files is
+        constructed by listing files under SRC.
         """
     )
     parser.add_argument(
@@ -45,8 +60,8 @@ def create_parser():
         metavar='FILE',
         nargs='+',
         help="""
-        A list of files produced by this program to merge
-        into a single file (a summary).
+        A list of files produced by this program to merge into a
+        single file.
         """
     )
     parser.add_argument(
@@ -74,8 +89,20 @@ def main():
         print(json.dumps(make_sources.merge(args.merge), indent=2))
         exit()
 
-    print(json.dumps(make_sources.source_files(args.builddir, args.srcdir),
-                     indent=2))
+    if args.blddir:
+        result = make_sources.sources_found_using_make(args.blddir,
+                                                       args.srcdir)
+    else:
+        args.srcdir = os.path.abspath(args.srcdir)
+        if platform.system() == 'Windows':
+            # Windows does not have the faster find command
+            result = make_sources.sources_found_using_walk(args.srcdir,
+                                                           args.srcexclude)
+        else:
+            result = make_sources.sources_found_using_find(args.srcdir,
+                                                           args.srcexclude)
+
+    print(json.dumps(result, indent=2))
 
 if __name__ == '__main__':
     main()

@@ -195,9 +195,8 @@ def directory_depth(path):
 
     The depth of dir1/dir2/dir3/file.c is 3.
     """
-    path = path.strip().rstrip('/')
+    path = os.path.normpath(path.strip())
     return len(path.split('/'))-1
-
 
 def directory_ancestor(depth):
     # pylint: disable=unused-variable
@@ -230,14 +229,6 @@ def html_footer(fp):
 
 def html_line(fp, line, lineno, ls=None):
     """Write the annotated source line to an html file.
-
-    Args:
-        filep (str): a file handle open for writing
-        line (str): the line of the source code
-        lineno (int): the line number of the source code
-        depth (int): the depth of the source code file below the source root
-        tags (obj): the Tags object for the source tree
-        color (str): the desired color for the source line
     """
     class_map = {
         linestatus.HIT: ' class="hit"',
