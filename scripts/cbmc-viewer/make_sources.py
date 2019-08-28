@@ -1,5 +1,6 @@
 """Generate the list of source files used to build a goto binary."""
 
+import sys
 import logging
 import os
 import json
@@ -70,12 +71,16 @@ def sources_found_using_make(blddir='.', srcdir='.'):
 
     """
 
+    logging.info('Running make in %s', blddir)
     blddir = os.path.abspath(blddir)
     # Preprocess and extract commands of form 'goto-cc -E -o file'
     bld_commands = build_with_preprocessor(blddir)
+    logging.debug('Running make found build commands %s', bld_commands)
     bld_files = preprocessed_files(bld_commands, blddir)
+    logging.debug('Running make found build files %s', bld_files)
     bld_output = preprocessed_output(bld_files)
     files = included_source_files(bld_output, blddir)
+    logging.debug('Running make found source files %s', files)
     return source_summary(srcdir, files)
 
 ################################################################
@@ -83,14 +88,20 @@ def sources_found_using_make(blddir='.', srcdir='.'):
 def source_summary(srcdir, files, files_to_exclude=None):
     """Select sources under source root and gather metrics."""
 
-    root = os.path.abspath(srcdir)
+    logging.debug('source_summary srcdir: %s', srcdir)
+    logging.debug('source_summary files: %s', files)
+    logging.debug('source_summary files_to_exclude: %s', files_to_exclude)
     if files_to_exclude:
         files = [name for name in files
                  if not re.match(files_to_exclude, name)]
     files = [name for name in files
              if name.endswith(('.c', '.C', '.h', '.H', '.inl'))]
-    files = sorted(list(set(files)))
     files = [os.path.normpath(name) for name in files]
+    root = os.path.abspath(srcdir)
+    realroot = os.path.realpath(root)
+    files = [name.replace(realroot, root) for name in files]
+    files = sorted(list(set(files)))
+    logging.debug('source_summary: files after processing %s', files)
 
     # In the special case where all files have relative pathnames,
     # we assume they are all relative to the source directory.
@@ -101,9 +112,11 @@ def source_summary(srcdir, files, files_to_exclude=None):
         raise UserWarning("Path not consistently absolute or relative")
 
     if all_full_paths:
+        logging.info('Found files were full paths')
         full_paths, relative_paths = source_files_under_root(files, root)
         all_files = files
     if all_relative_paths:
+        logging.info('Found files were relative paths')
         full_paths = [os.path.abspath(os.path.join(root, name))
                       for name in files]
         relative_paths = files
@@ -132,15 +145,20 @@ def run_command(command, directory=None):
 def build_with_preprocessor(directory=None):
     """Build the goto binary using goto-cc as a preprocessor."""
 
+    logging.info('Doing "make clean" in %s', directory)
     run_command(['make', 'clean'], directory)
+    logging.info('Doing "make GOTO_CC=goto-cc -E goto" in %s', directory)
     result = run_command(['make', 'GOTO_CC=goto-cc -E', 'goto'], directory)
     # Make will fail when it tries to link the preprocessed output
     # What is a system-independent way of skipping an okay link failure?
+    logging.debug('Doing make generated result: %s', result)
     if result.returncode and result.returncode != 2:
         print(result.stdout)
         print(result.stderr)
         result.check_returncode()
-    return [line for line in result.stdout.splitlines()
+    text = ' '.join(result.stdout.splitlines())
+    lines = text.replace('goto-cc', '\ngoto-cc').splitlines()
+    return [line for line in lines
             if line.strip().startswith('goto-cc')]
 
 def preprocessed_files(commands, directory=None):
@@ -186,9 +204,9 @@ def included_source_files(output, directory=None):
 ################################################################
 
 def source_files_under_root(files, root):
+
     """Extract the source files under the root."""
 
-    root = os.path.abspath(root)
     full = [name for name in files if name.startswith(root)]
     relative = [name[len(root):].lstrip(os.sep) for name in full]
     return sorted(list(set(full))), sorted(list(set(relative)))
@@ -208,9 +226,13 @@ def sloc(files, root=None):
         if error.errno == 7: # 'Argument list too long'
             return None
     if result.returncode:
-        print(result.stdout)
-        print(result.stderr)
-        result.check_returncode()
+        sys.stderr.write("\nsloc failed, skipping sloc statistics\n\n")
+        logging.debug("sloc failed, ignoring sloc statistics")
+        logging.debug("sloc standard output was:")
+        logging.debug(result.stdout)
+        logging.debug("sloc standard error is:")
+        logging.debug(result.stderr)
+        return None
     # sloc produces a great deal of useful data in addition to the summary
     return json.loads(result.stdout)["summary"]
 
