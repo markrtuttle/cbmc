@@ -39,6 +39,7 @@ def create_parser():
     parser.add_argument(
         '--srcdir',
         metavar='SRC',
+        required=True,
         help="""
         The root of the source tree.
         The build directory is usually under the root of the source
