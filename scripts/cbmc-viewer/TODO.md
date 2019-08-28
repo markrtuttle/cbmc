@@ -29,3 +29,56 @@
 * Cleanup error handling in tags.py and block.py.
 
 
+
+Architecture plans:
+
+CBMC must produce cbmc.json, coverage.json, properties.json since these
+require knowing the cbmc arguments.
+
+make-sources (from blddir with make, find, or xwalk)
+make-symbols (from made sources)
+make-coverage (from cbmc output)
+make-results (from cbmc output)
+make-traces (from cbmc output)
+make-loops
+make-properties
+make-reachable
+
+make-report takes all of this to generate the report
+cbmc-viewer is a script invoking these functions
+
+Generally, make_x.make_x returns a (metadata, data) pair where metadata is
+the timestamp, arguments, and argument timestamps if relevant.  And make-x
+invokes make_x.make_x and dumps json of {metadata, data}.  Then the xt.py
+module reads in this stuff and does all the rendering required by make-report.
+
+
+make-sources - done
+make-symbols - done (moved to exuberant ctags)
+do comments
+do css
+then do remainder slowly
+
+
+
+
+Goal:
+
+markup contains ALL html markup instructions
+  this is our html generator
+
+report produces top level report
+traces produces traces
+loops produces loops
+tree produces source tree
+
+sourcet manages source files from make-sources (from build, walk, find)
+symbolt manages symbols from make-symbols
+coveraget manages coverage from make-coverage (from xml, json)
+resultt manages pass/fail results from make-results (from txt)
+tracet manages traces from make-traces (from txt)
+  use source to markup source locations
+loopt manages loops from make-loops (from goto binary)
+propertyt manages properties from make-properties (from xml or json)
+reachablet manages reachable functions from make-reachable
+

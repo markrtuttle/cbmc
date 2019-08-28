@@ -1,0 +1,17 @@
+.trace div.block {
+    display: inline;
+}
+
+.trace div.block.hidden {
+    display: none;
+}
+
+.trace a.source {
+    text-decoration: none;
+    color: inherit;
+}
+
+.trace {
+    font-family: monospace;
+    white-space: pre;
+}
