@@ -28,7 +28,7 @@ class Markup:
         """Map a source file path to the corresponding html file path."""
         return src+".html"
 
-    def link_line(self, src, line, text, depth=0, target=None):
+    def link_to_line(self, src, line, text, depth=0, target=None):
         """Link text to a line in a source file."""
 
         path = directory_ancestor(depth) + '/' + self.src_html(src)
@@ -39,7 +39,7 @@ class Markup:
     def link_to_file(self, text, src, depth=0, target=None):
         """Link text to a source file."""
         # pylint: disable=too-many-arguments
-        return self.link_line(src, 0, text, depth, target)
+        return self.link_to_line(src, 0, text, depth, target)
 
     def link_symbol(self, symbol, depth=0, target=None, text=None):
         """Link a symbol to its definition."""
@@ -50,7 +50,7 @@ class Markup:
 
         text = text or symbol
         (src, line) = val
-        return self.link_line(src, line, text, depth, target)
+        return self.link_to_line(src, line, text, depth, target)
 
     def link_file(self, src, depth=0, color=None):
         """Link a source file to its html file."""
@@ -74,7 +74,7 @@ class Markup:
         file_text_start = match.start(1)
         file_text_end = match.end(1)
         file_name = match.group(2)
-        file_link = self.link_to_file(file_name, depth, file_text, target)
+        file_link = self.link_to_file(file_text, file_name, depth, target)
 
         func_text = match.group(3)
         func_text_start = match.start(3)
@@ -86,7 +86,7 @@ class Markup:
         line_text_start = match.start(5)
         line_text_end = match.end(5)
         line_num = match.group(6)
-        line_link = self.link_line(file_name, line_num, line_text,
+        line_link = self.link_to_line(file_name, line_num, line_text,
                                    depth, target)
 
         if file_name[0] == '<' and file_name[-1] == '>':

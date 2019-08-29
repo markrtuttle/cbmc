@@ -106,7 +106,7 @@ def format_report(report, markup, loops=None, traces=None):
             html.append("<li>In {}<ul>".format(markup.link_function(func)))
             for line in sorted(report[src][func]):
                 html.append("<li>Line {}:<ul>"
-                            .format(markup.link_to_line(line, src, line)))
+                            .format(markup.link_to_line(src, line, line)))
                 for error in sorted(report[src][func][line][ERROR]):
                     html.append("<li>[{}] {}</li>"
                                 .format(traces.link_trace(error[0],
