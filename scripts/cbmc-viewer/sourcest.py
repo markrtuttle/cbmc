@@ -26,9 +26,11 @@ class Sources:
             self.srcroot = os.path.abspath(srcdir)
             if platform.system() == 'Windows':
                 # Windows does not have the faster find command
-                self.srcfiles = make_sources.sources_found_using_walk(self.srcroot, srcexclude)['files']
+                self.srcfiles = make_sources.sources_found_using_walk(self.srcroot,
+                                                                      srcexclude)['files']
             else:
-                self.srcfiles = make_sources.sources_found_using_find(self.srcroot, srcexclude)['files']
+                self.srcfiles = make_sources.sources_found_using_find(self.srcroot,
+                                                                      srcexclude)['files']
             # Consider writing results to sources.json for logging, etc.
 
     def files(self):

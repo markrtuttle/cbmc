@@ -109,8 +109,9 @@ class Symbols:
 
         if symfile:
             with open(symfile) as handle:
-                self.symbols = json.load(handle)
-                self.metadata = None
+                data = json.load(handle)
+                self.symbols = data['symbols']
+                self.metadata = data['metadata']
                 return
 
         if not srcdir and not srcfiles:

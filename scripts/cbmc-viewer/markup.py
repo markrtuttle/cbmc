@@ -52,13 +52,13 @@ class Markup:
         (src, line) = val
         return self.link_to_line(src, line, text, depth, target)
 
-    def link_file(self, src, depth=0, color=None):
+    def link_file(self, src, depth=0):
         """Link a source file to its html file."""
-        return self.link_to_file(src, src, depth, color)
+        return self.link_to_file(src, src, depth)
 
-    def link_function(self, function, depth=0, color=None):
+    def link_function(self, function, depth=0):
         """Link a function to its definition."""
-        return self.link_symbol(function, depth, color)
+        return self.link_symbol(function, depth)
 
     def markup_source_location(self, loc, depth=0, target=None):
         # pylint: disable=too-many-locals
@@ -87,7 +87,7 @@ class Markup:
         line_text_end = match.end(5)
         line_num = match.group(6)
         line_link = self.link_to_line(file_name, line_num, line_text,
-                                   depth, target)
+                                      depth, target)
 
         if file_name[0] == '<' and file_name[-1] == '>':
             return html.escape(loc, quote=False)
