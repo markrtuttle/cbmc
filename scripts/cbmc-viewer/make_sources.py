@@ -9,7 +9,7 @@ import re
 
 ################################################################
 
-def sources_found_using_find(srcdir, srcexclude=None):
+def sources_found_using_find(srcdir, srcexclude=None, proofdir=None):
     """Generate the list of source files with the Linux find command.
 
     All paths returned will begin with './'.  It would be cleaner to
@@ -21,13 +21,13 @@ def sources_found_using_find(srcdir, srcexclude=None):
         cmd = ["find", "-L", ".",
                "(", "-iname", "*.[ch]", "-or", "-iname", "*.inl", ")"]
         result = subprocess.run(cmd, capture_output=True, text=True, check=True, cwd=srcdir)
-        return source_summary(srcdir, result.stdout.splitlines(), srcexclude)
+        return source_summary(srcdir, result.stdout.splitlines(), srcexclude, proofdir=proofdir)
     except subprocess.CalledProcessError:
         raise UserWarning('Failed to run command "{}"'.format(' '.join(cmd)))
 
 ################################################################
 
-def sources_found_using_walk(srcdir, srcexclude=None):
+def sources_found_using_walk(srcdir, srcexclude=None, proofdir=None):
     """Generate the list of source files with the Python os.walk method.
 
     All paths returned will begin with './'.  It would be cleaner to
@@ -49,11 +49,11 @@ def sources_found_using_walk(srcdir, srcexclude=None):
         raise UserWarning('Source directory not found: {}'.format(srcdir))
     finally:
         os.chdir(cwd)
-    return source_summary(srcdir, files, srcexclude)
+    return source_summary(srcdir, files, srcexclude, proofdir=proofdir)
 
 ################################################################
 
-def sources_found_using_make(blddir='.', srcdir='.'):
+def sources_found_using_make(blddir='.', srcdir='.', proofdir=None):
     """Generate the list of source files with make.
 
     This method uses make and the goto-cc preprocessor to generate the
@@ -81,11 +81,11 @@ def sources_found_using_make(blddir='.', srcdir='.'):
     bld_output = preprocessed_output(bld_files)
     files = included_source_files(bld_output, blddir)
     logging.debug('Running make found source files %s', files)
-    return source_summary(srcdir, files)
+    return source_summary(srcdir, files, proofdir=proofdir)
 
 ################################################################
 
-def source_summary(srcdir, files, files_to_exclude=None):
+def source_summary(srcdir, files, files_to_exclude=None, proofdir=None):
     """Select sources under source root and gather metrics."""
 
     logging.debug('source_summary srcdir: %s', srcdir)
@@ -122,11 +122,20 @@ def source_summary(srcdir, files, files_to_exclude=None):
         relative_paths = files
         all_files = full_paths
 
-    return {'root': root,
-            'files': relative_paths,
-            'lines-of-code': sloc(relative_paths, root),
-            'root-files': full_paths,
-            'all-files': all_files}
+    results = {'root': root,
+               'files': relative_paths,
+               'lines-of-code': sloc(relative_paths, root),
+               'root-files': full_paths,
+               'all-files': all_files}
+
+    if proofdir:
+        proof_full_paths = [path for path in full_paths if proofdir in path]
+        proof_relative_paths = [path for path in relative_paths if proofdir in path]
+        results['proof-files'] = proof_relative_paths
+        results['proof-root-files'] = proof_full_paths
+        results['proof-lines-of-code'] = sloc(proof_relative_paths, root)
+
+    return results
 
 ################################################################
 
