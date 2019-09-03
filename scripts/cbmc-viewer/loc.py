@@ -146,7 +146,8 @@ def reachable_functions(goto, builddir=None):
         func = entry['function']
         if internal_file(os.path.basename(name)):
             continue
-        functions.append((func, expand_pathname(name, builddir)))
+        size = int(entry['last line']) - int(entry['first line'])
+        functions.append((func, expand_pathname(name, builddir), size))
     return sorted(functions)
 
 ################################################################
@@ -158,15 +159,17 @@ def count_lines(linesofcode, reachablefunctions, cbmcdir=None):
     if cbmcdir:
         cbmcdir = os.path.normpath(cbmcdir).strip(os.sep)
 
-    total = 0
-    for func, path in reachablefunctions:
+    total_loc = 0
+    total_size = 0
+    for func, path, size in reachablefunctions:
         if cbmcdir and not cbmcdir in path:
             continue
         number = len(linesofcode[func])
-        total += number
+        total_loc += number
+        total_size += size
         logging.info('Line count: %s', (func, number))
-    logging.info('Total line count: %s', total)
-    return total
+    logging.info('Total line count: %s', total_loc)
+    return total_loc, total_size
 
 ################################################################
 # Build the goto binary and return its name.
@@ -219,8 +222,8 @@ def cbmc_lines_of_code(blddir, cbmcdir=None):
     pgm = show_goto_functions(goto_path)
     loc = lines_of_goto_functions(pgm, builddir=blddir)
     reachable = reachable_functions(goto_path, builddir=blddir)
-    count = count_lines(loc, reachable)
-    harness_count = count_lines(loc, reachable, cbmcdir=cbmcdir)
+    total_loc, total_size = count_lines(loc, reachable)
+    harness_total_loc, harness_total_size = count_lines(loc, reachable, cbmcdir=cbmcdir)
 
     logging.debug('Lines of code:')
     logging.debug(loc)
@@ -229,8 +232,10 @@ def cbmc_lines_of_code(blddir, cbmcdir=None):
 
     report = {
         'property': proof_name(goto_path)[:-len('.goto')],
-        'lines': count,
-        'harness-lines': harness_count
+        'lines': total_loc,
+        'harness-lines': harness_total_loc,
+        'size': total_size,
+        'harness-size': harness_total_size
         }
 
     return report
