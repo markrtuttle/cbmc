@@ -37,7 +37,7 @@ PROVER = 'prover-status'
 class Result:
     def __init__(self,
                  results=None, txtfile=None, xmlfile=None, jsonfile=None,
-                 wkdir=None, root=None):
+                 location=None):
         """Load CBMC results.
 
         Load results from a json file, or parse the text or xml or
@@ -49,8 +49,8 @@ class Result:
         to this root.
         """
         logging.debug("Result: "
-                      "results=%s xmlfile=%s jsonfile=%s wkdir=%s root=%s",
-                      results, xmlfile, jsonfile, wkdir, root)
+                      "results=%s xmlfile=%s jsonfile=%s",
+                      results, xmlfile, jsonfile)
 
         self.program = None
         self.status = []

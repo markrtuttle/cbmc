@@ -2,19 +2,16 @@
 
 import json
 import re
-import os
 
 import runt
+import locationt
 
 class Reachable:
     """The statically reachable functions.
     """
 
-    def __init__(self, pgm, root=None):
+    def __init__(self, pgm, location=None):
         """Initialize the statically reachable functions."""
-
-        # use linux path names
-        root = root.replace(os.sep, '/').rstrip('/') + '/' if root else ''
 
         # get reachable functions
         jsons = runt.run(["goto-analyzer", "--reachable-functions",
@@ -28,16 +25,16 @@ class Reachable:
         self.functions = {}
         for function in json.loads(jsons):
             name = function['function']
-            path = os.path.normpath(function['file name']).replace(os.sep, '/')
+            path = locationt.canonical(function['file name'])
 
             if name.startswith('__CPROVER'):
                 continue
-            if not path.startswith(root):
+            if not path.startswith(location.blddir):
                 continue
-            if re.match('^.*(<[^>]*>)$', path):
+            if locationt.builtin_name(path):
                 continue
 
-            path = path[len(root):]
+            path = locationt.canonical_childpath(path, location.blddir)
             self.functions[path] = self.functions.get(path, set())
             self.functions[path].add(name)
 

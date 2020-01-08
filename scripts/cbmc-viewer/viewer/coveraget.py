@@ -4,7 +4,6 @@ import json
 import logging
 import re
 
-import locationt
 import parse
 
 class Coverage:
@@ -13,7 +12,7 @@ class Coverage:
     def __init__(self,
                  coverage=None,
                  txtfile=None, xmlfile=None, jsonfile=None,
-                 root=None):
+                 location=None):
         """Load CBMC coverage data.
 
         Load the data from a json file, or parse the xml or json
@@ -21,8 +20,8 @@ class Coverage:
         If a souce root is given, make all paths under this root
         relative paths relative to this root.
         """
-        logging.debug("Coverage: coverage=%s xmlfile=%s jsonfile=%s root=%s",
-                      coverage, xmlfile, jsonfile, root)
+        logging.debug("Coverage: coverage=%s xmlfile=%s jsonfile=%s",
+                      coverage, xmlfile, jsonfile)
 
         if txtfile:
             raise UserWarning("Text files not allowed for coverage data.")
@@ -40,9 +39,9 @@ class Coverage:
             with open(coverage) as load:
                 self.coverage = fix_line_numbers(json.load(load)['coverage'])
         elif jsonfile:
-            self.coverage, _ = parse_json_coverage(jsonfile, root)
+            self.coverage, _ = parse_json_coverage(jsonfile, location)
         elif xmlfile:
-            self.coverage, _ = parse_xml_coverage(xmlfile, root)
+            self.coverage, _ = parse_xml_coverage(xmlfile, location)
         else:
             print("No coverage data found")
             logging.info("No coverage data found")
@@ -191,7 +190,7 @@ def parse_goal(coverage, fullpaths, description, status, srcloc):
 
 ################################################################
 
-def parse_xml_coverage(xmlfile, root=None):
+def parse_xml_coverage(xmlfile, location):
     xml = parse.parse_xml_file(xmlfile)
     if xml is None:
         return {}, {}
@@ -204,12 +203,12 @@ def parse_xml_coverage(xmlfile, root=None):
             continue
         status = goal.get("status")
         loc = goal.find("location")
-        srcloc = locationt.parse_xml_srcloc(loc, root=root)
+        srcloc = location.parse_xml_srcloc(loc)
         coverage, fullpaths = parse_goal(coverage, fullpaths,
                                          description, status, srcloc)
     return coverage, fullpaths
 
-def parse_json_coverage(jsonfile, root=None):
+def parse_json_coverage(jsonfile, location):
     data = parse.parse_json_file(jsonfile)
     if data is None:
         return {}, {}
@@ -226,20 +225,7 @@ def parse_json_coverage(jsonfile, root=None):
         description = goal["description"]
         status = goal["status"]
         loc = goal["sourceLocation"]
-        srcloc = locationt.parse_json_srcloc(loc, root=root)
+        srcloc = location.parse_json_srcloc(loc)
         coverage, fullpaths = parse_goal(coverage, fullpaths,
                                          description, status, srcloc)
     return coverage, fullpaths
-
-################################################################
-
-def main():
-    cover_xml = Coverage(xmlfile="coverage.xml", root="/Users/mrtuttle/freertos")
-    print(json.dumps(cover_xml.coverage, indent=2, sort_keys=True))
-
-    cover_json = Coverage(jsonfile="coverage.json", root="/Users/mrtuttle/freertos")
-    print(json.dumps(cover_json.coverage, indent=2, sort_keys=True))
-    print("equal = ", cover_xml == cover_json)
-
-if __name__ == "__main__":
-    main()

@@ -15,6 +15,7 @@ import shutil
 import sys
 import os
 
+import locationt
 import loopt
 import propertyt
 import resultt
@@ -261,9 +262,6 @@ def choose_file_type(file_def, file_txt, file_json, file_xml):
 def arguments():
     args = command_line_parser().parse_args()
 
-    args.srcdir = os.path.abspath(args.srcdir) if args.srcdir else None
-    args.blddir = os.path.abspath(args.blddir) if args.blddir else None
-
     (args.cbmc_result_txt,
      args.cbmc_result_json,
      args.cbmc_result_xml) = choose_file_type(args.cbmc_result,
@@ -304,13 +302,14 @@ def main():
     """Construct the cbmc report."""
 
     args = arguments()
+    location = locationt.Location(args.srcdir, args.blddir, args.wkdir)
 
     coverage = coveraget.Coverage(
         coverage=args.coverage,
         txtfile=args.cbmc_coverage_txt,
         xmlfile=args.cbmc_coverage_xml,
         jsonfile=args.cbmc_coverage_json,
-        root=args.srcdir
+        location=location
     )
     dump(coverage, 'cbmc-coverage.json')
     loops = loopt.Loop(
@@ -319,7 +318,7 @@ def main():
         xmlfile=args.cbmc_loop_xml,
         jsonfile=args.cbmc_loop_json,
         goto=args.goto,
-        root=args.srcdir
+        location=location
     )
     dump(loops, 'cbmc-loops.json')
     properties = propertyt.Property(
@@ -327,7 +326,7 @@ def main():
         txtfile=args.cbmc_property_txt,
         xmlfile=args.cbmc_property_xml,
         jsonfile=args.cbmc_property_json,
-        root=args.srcdir
+        location=location
     )
     dump(properties, 'cbmc-properties.json')
     results = resultt.Result(
@@ -335,7 +334,7 @@ def main():
         txtfile=args.cbmc_result_txt,
         xmlfile=args.cbmc_result_xml,
         jsonfile=args.cbmc_result_json,
-        root=args.srcdir
+        location=location
     )
     dump(results, 'cbmc-results.json')
     traces = tracet.Trace(
@@ -343,24 +342,23 @@ def main():
         txtfile=args.cbmc_result_txt,
         xmlfile=args.cbmc_result_xml,
         jsonfile=args.cbmc_result_json,
-        root=args.srcdir
+        location=location
     )
     dump(traces, 'cbmc-traces.json')
 
-    reachable = reachablet.Reachable(args.goto, args.srcdir)
+    reachable = reachablet.Reachable(args.goto, location=location)
     dump(reachable, 'cbmc-reachable.json')
 
     # Make sources last, it may delete the goto binary
     sources = sourcet.Source(
         sources=args.sources,
-        root=args.srcdir,
-        build=args.blddir
+        location=location
     )
     dump(sources, 'cbmc-sources.json')
     symbols = symbolt.Symbol(
         symbols=args.symbols,
-        root=args.srcdir,
-        files=sources.files
+        files=sources.files,
+        location=location
     )
     dump(symbols, 'cbmc-symbols.json')
 

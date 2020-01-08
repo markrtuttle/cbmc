@@ -6,19 +6,18 @@ import re
 import json
 import platform
 
-import locationt
 import runt
 
 ################################################################
 
 class Source:
-    def __init__(self, build=None, root=None, sources=None,
+    def __init__(self, location=None, sources=None,
                  walk=None, find=None, extensions=None, exclude=None):
 
         logging.debug('Source init: '
-                      'build: %s, root: %s, sources: %s, walk: %s, '
+                      'sources: %s, walk: %s, '
                       'find: %s, extensions: %s, exclude: %s',
-                      build, root, sources, walk,
+                      sources, walk,
                       find, extensions, exclude)
 
         self.root = None
@@ -27,8 +26,8 @@ class Source:
         self.root_files = []
         self.all_files = []
 
-        build = os.path.abspath(build) if build else None
-        root = os.path.abspath(root) if root else None
+        build = location.wkdir
+        root = location.blddir
         if walk and find or not walk and not find:
             walk = platform.system() == 'Windows'
             find = not walk

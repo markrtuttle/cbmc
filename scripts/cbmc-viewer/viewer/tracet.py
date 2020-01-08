@@ -22,21 +22,20 @@ import logging
 import json
 
 import parse
-import locationt
 
 def binary_as_bytes(binary):
     if not binary:
         return binary
     bits = re.sub(r'\s', '', binary)
-    bytes = re.findall('[01]{8}', bits)
-    if bits != ''.join(bytes):
+    bites = re.findall('[01]{8}', bits)
+    if bits != ''.join(bites):
         return binary
-    return ' '.join(bytes)
+    return ' '.join(bites)
 
 class Trace:
     def __init__(self,
                  traces=None, txtfile=None, xmlfile=None, jsonfile=None,
-                 wkdir=None, root=None):
+                 location=None):
         """Load CBMC traces.
 
         Load traces from a json file, or parse the text or xml or
@@ -48,8 +47,8 @@ class Trace:
         to this root.
         """
         logging.debug("Trace: "
-                      "traces=%s xmlfile=%s jsonfile=%s wkdir=%s root=%s",
-                      traces, xmlfile, jsonfile, wkdir, root)
+                      "traces=%s xmlfile=%s jsonfile=%s",
+                      traces, xmlfile, jsonfile)
 
         data = traces or txtfile or jsonfile or xmlfile
         parser = (load_traces if traces else
@@ -61,7 +60,7 @@ class Trace:
             print("No trace data found")
             logging.info("No trace data found")
             return
-        self.traces = parser(data, root, wkdir)
+        self.traces = parser(data, location)
 
     def dump(self):
         return json.dumps(self.traces, indent=2, sort_keys=True)
@@ -75,7 +74,7 @@ def load_traces(loadfile):
 
 ################################################################
 
-def parse_text_traces(textfile, root=None, wkdir=None):
+def parse_text_traces(textfile, location):
     with open(textfile) as data:
         lines = '\n'.join(data.read().splitlines())
         blocks = re.split(r'\n\n+', lines)
@@ -97,13 +96,13 @@ def parse_text_traces(textfile, root=None, wkdir=None):
         if not in_trace:
             continue
         if block.startswith('State'):
-            trace.append(parse_text_state(block, root, wkdir))
+            trace.append(parse_text_state(block, location))
             continue
         if block.startswith('Assumption'):
-            trace.append(parse_text_assumption(block, root, wkdir))
+            trace.append(parse_text_assumption(block, location))
             continue
         if block.startswith('Violated property'):
-            trace.append(parse_text_failure(block, root, wkdir))
+            trace.append(parse_text_failure(block, location))
             continue
         if block.startswith('** '):
             if name:
@@ -123,11 +122,9 @@ def parse_text_assignment(string):
         return list(match.groups()[:2]) + [None]
     raise UserWarning("Can't parse assignment: {}".format(string))
 
-def parse_text_state(block, root=None, wkdir=None):
+def parse_text_state(block, location):
     lines = block.splitlines()
-    srcloc = locationt.parse_text_srcloc(
-        lines[0], root=root, wkdir=wkdir, asdict=True
-    )
+    srcloc = location.parse_text_srcloc(lines[0], asdict=True)
     # assignment may be split over remaining lines in block
     lhs, rhs_value, rhs_binary = parse_text_assignment(' '.join(lines[2:]))
     return {
@@ -140,11 +137,9 @@ def parse_text_state(block, root=None, wkdir=None):
         }
     }
 
-def parse_text_assumption(block, root=None, wkdir=None):
+def parse_text_assumption(block, location):
     lines = block.splitlines()
-    srcloc = locationt.parse_text_srcloc(
-        lines[1], root=root, wkdir=wkdir, asdict=True
-    )
+    srcloc = location.parse_text_srcloc(lines[1], asdict=True)
     return {
         'kind': 'assumption',
         'location': srcloc,
@@ -153,11 +148,9 @@ def parse_text_assumption(block, root=None, wkdir=None):
         }
     }
 
-def parse_text_failure(block, root=None, wkdir=None):
+def parse_text_failure(block, location):
     lines = block.splitlines()
-    srcloc = locationt.parse_text_srcloc(
-        lines[1], root=root, wkdir=wkdir, asdict=True
-    )
+    srcloc = location.parse_text_srcloc(lines[1], asdict=True)
     return {
         'kind': 'failure',
         'location': srcloc,
@@ -169,23 +162,21 @@ def parse_text_failure(block, root=None, wkdir=None):
 
 ################################################################
 
-def parse_json_traces(jsonfile, root=None, wkdir=None):
+def parse_json_traces(jsonfile, location):
     data = parse.parse_json_file(jsonfile)
     if data is None:
         return {}
 
-    _ = wkdir # ignore
-
     results = [entry['result'] for entry in data if 'result' in entry][0]
-    traces = {result['property']: parse_json_trace(result['trace'], root)
+    traces = {result['property']: parse_json_trace(result['trace'], location)
               for result in results if 'trace' in result}
     return traces
 
-def parse_json_trace(steps, root=None):
-    trace = [parse_json_step(step, root) for step in steps]
+def parse_json_trace(steps, location):
+    trace = [parse_json_step(step, location) for step in steps]
     return [step for step in trace if step is not None]
 
-def parse_json_step(step, root=None):
+def parse_json_step(step, location):
     if step.get('hidden'):
         return None
 
@@ -198,21 +189,19 @@ def parse_json_step(step, root=None):
     if parser is None:
         raise UserWarning("Unknown json step type: {}".format(kind))
 
-    return parser(step, root)
+    return parser(step, location)
 
-def parse_json_failure(step, root=None):
+def parse_json_failure(step, location):
     return {
         'kind': 'failure',
-        'location': locationt.parse_json_srcloc(
-            step.get('sourceLocation'), root, True
-        ),
+        'location': location.parse_json_srcloc(step.get('sourceLocation'), True),
         'detail': {
             'property': step.get('property'),
             'reason': step.get('reason')
         }
     }
 
-def parse_json_assignment(step, root=None):
+def parse_json_assignment(step, location):
     akind = step.get('assignmentType')
     kind = ('variable-assignment' if akind == 'variable' else
             'parameter-assignment' if akind == 'actual-parameter' else None)
@@ -227,9 +216,7 @@ def parse_json_assignment(step, root=None):
 
     return {
         'kind': kind,
-        'location': locationt.parse_json_srcloc(
-            step.get('sourceLocation'), root, True
-        ),
+        'location': location.parse_json_srcloc(step.get('sourceLocation'), True),
         'detail': {
             'lhs': step['lhs'],
             'rhs-value': data or json.dumps(step['value']),
@@ -237,61 +224,63 @@ def parse_json_assignment(step, root=None):
         }
     }
 
-def parse_json_function_call(step, root=None):
+def parse_json_function_call(step, location):
     return {
         'kind': 'function-call',
-        'location': locationt.parse_json_srcloc(
-            step.get('sourceLocation'), root, True
+        'location': location.parse_json_srcloc(
+            step.get('sourceLocation'),
+            True
         ),
         'detail': {
             'name': step['function']['displayName'],
-            'location': locationt.parse_json_srcloc(
-                step['function']['sourceLocation'], root, True
+            'location': location.parse_json_srcloc(
+                step['function']['sourceLocation'],
+                True
             )
         }
     }
 
-def parse_json_function_return(step, root=None):
+def parse_json_function_return(step, location):
     return {
         'kind': 'function-return',
-        'location': locationt.parse_json_srcloc(
-            step.get('sourceLocation'), root, True
+        'location': location.parse_json_srcloc(
+            step.get('sourceLocation'),
+            True
         ),
         'detail': {
             'name': step['function']['displayName'],
-            'location': locationt.parse_json_srcloc(
-                step['function']['sourceLocation'], root, True
+            'location': location.parse_json_srcloc(
+                step['function']['sourceLocation'],
+                True
             )
         }
     }
 
-def parse_json_location_only(step, root=None):
+def parse_json_location_only(step, location):
     _ = step
-    _ = root
+    _ = location
 
 ################################################################
 
-def parse_xml_traces(xmlfile, root=None, wkdir=None):
+def parse_xml_traces(xmlfile, location):
     xml = parse.parse_xml_file(xmlfile)
     if xml is None:
         return {}
-
-    _ = wkdir # ignore
 
     traces = {}
     for line in xml.iter('result'):
         name, status = line.get('property'), line.get('status')
         if status == 'SUCCESS':
             continue
-        traces[name] = parse_xml_trace(line.find('goto_trace'), root)
+        traces[name] = parse_xml_trace(line.find('goto_trace'), location)
 
     return traces
 
-def parse_xml_trace(steps, root=None):
-    trace = [parse_xml_step(step, root) for step in steps]
+def parse_xml_trace(steps, location):
+    trace = [parse_xml_step(step, location) for step in steps]
     return [step for step in trace if step is not None]
 
-def parse_xml_step(step, root=None):
+def parse_xml_step(step, location):
     if step.get('hidden') == 'true':
         return None
 
@@ -305,13 +294,14 @@ def parse_xml_step(step, root=None):
     if parser is None:
         raise UserWarning("Unknown xml step type: {}".format(kind))
 
-    return parser(step, root)
+    return parser(step, location)
 
-def parse_xml_failure(step, root=None):
+def parse_xml_failure(step, location):
     return {
         'kind': 'failure',
-        'location': locationt.parse_xml_srcloc(
-            step.find('location'), root, True
+        'location': location.parse_xml_srcloc(
+            step.find('location'),
+            True
         ),
         'detail': {
             'property': step.get('property'),
@@ -319,7 +309,7 @@ def parse_xml_failure(step, root=None):
         }
     }
 
-def parse_xml_assignment(step, root=None):
+def parse_xml_assignment(step, location):
     akind = step.get('assignment_type')
     kind = ('variable-assignment' if akind == 'state' else
             'parameter-assignment' if akind == 'actual_parameter' else None)
@@ -328,8 +318,9 @@ def parse_xml_assignment(step, root=None):
 
     return {
         'kind': kind,
-        'location': locationt.parse_xml_srcloc(
-            step.find('location'), root, True
+        'location': location.parse_xml_srcloc(
+            step.find('location'),
+            True
         ),
         'detail': {
             'lhs': step.find('full_lhs').text,
@@ -338,37 +329,41 @@ def parse_xml_assignment(step, root=None):
         }
     }
 
-def parse_xml_function_call(step, root=None):
+def parse_xml_function_call(step, location):
     return {
         'kind': 'function-call',
-        'location': locationt.parse_xml_srcloc(
-            step.find('location'), root, True
+        'location': location.parse_xml_srcloc(
+            step.find('location'),
+            True
         ),
         'detail': {
             'name': step.find('function').get('display_name'),
-            'location': locationt.parse_xml_srcloc(
-                step.find('function').find('location'), root, True
+            'location': location.parse_xml_srcloc(
+                step.find('function').find('location'),
+                True
             )
         }
     }
 
-def parse_xml_function_return(step, root=None):
+def parse_xml_function_return(step, location):
     return {
         'kind': 'function-return',
-        'location': locationt.parse_xml_srcloc(
-            step.find('location'), root, True
+        'location': location.parse_xml_srcloc(
+            step.find('location'),
+            True
         ),
         'detail': {
             'name': step.find('function').get('display_name'),
-            'location': locationt.parse_xml_srcloc(
-                step.find('function').find('location'), root, True
+            'location': location.parse_xml_srcloc(
+                step.find('function').find('location'),
+                True
             )
         }
     }
 
-def parse_xml_location_only(step, root=None):
+def parse_xml_location_only(step, location):
     _ = step
-    _ = root
+    _ = location
 
 #step type
 #

@@ -5,7 +5,6 @@
 import json
 import logging
 
-import locationt
 import parse
 
 class Property:
@@ -13,7 +12,7 @@ class Property:
 
     def __init__(self, properties=None,
                  txtfile=None, xmlfile=None, jsonfile=None,
-                 root=None):
+                 location=None):
         """Load CBMC property information.
 
         Load the data from a json file, or parse the xml or json
@@ -21,8 +20,8 @@ class Property:
         If a souce root is given, make all paths under this root
         relative paths relative to this root.
         """
-        logging.debug("Properties: properties=%s xmlfile=%s jsonfile=%s root=%s",
-                      properties, xmlfile, jsonfile, root)
+        logging.debug("Properties: properties=%s xmlfile=%s jsonfile=%s",
+                      properties, xmlfile, jsonfile)
 
         if txtfile:
             raise UserWarning("Text files not allowed for property data.")
@@ -34,9 +33,9 @@ class Property:
             with open(properties) as load:
                 self.properties = json.load(load)['properties']
         elif jsonfile:
-            self.properties = parse_json_properties(jsonfile, root)
+            self.properties = parse_json_properties(jsonfile, location)
         elif xmlfile:
-            self.properties = parse_xml_properties(xmlfile, root)
+            self.properties = parse_xml_properties(xmlfile, location)
         else:
             print("No property information found")
             logging.info("No property information found")
@@ -44,8 +43,8 @@ class Property:
     def dump(self):
         return json.dumps({'properties': self.properties}, indent=2)
 
-def parse_json_properties(jsonfile, root):
-    logging.debug("parse_json_properties: jsonfile=%s root=%s", jsonfile, root)
+def parse_json_properties(jsonfile, location):
+    logging.debug("parse_json_properties: jsonfile=%s", jsonfile)
 
     data = parse.parse_json_file(jsonfile)
     if data is None:
@@ -68,13 +67,13 @@ def parse_json_properties(jsonfile, root):
             'class': klass,
             'description': description,
             'expression': expression,
-            'location': locationt.parse_json_srcloc(loc, root, asdict=True)
+            'location': location.parse_json_srcloc(loc, asdict=True)
         }
     return properties
 
 
-def parse_xml_properties(xmlfile, root):
-    logging.debug("parse_xml_properties: xmlfile=%s root=%s", xmlfile, root)
+def parse_xml_properties(xmlfile, location):
+    logging.debug("parse_xml_properties: xmlfile=%s", xmlfile)
 
     data = parse.parse_xml_file(xmlfile)
     if data is None:
@@ -91,6 +90,6 @@ def parse_xml_properties(xmlfile, root):
             'class': klass,
             'description': description,
             'expression': expression,
-            'location': locationt.parse_xml_srcloc(loc, root=root, asdict=True)
+            'location': location.parse_xml_srcloc(loc, asdict=True)
         }
     return properties
