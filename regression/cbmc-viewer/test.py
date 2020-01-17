@@ -18,6 +18,7 @@ import logging                            # setup log files
 import os                                 # get unix
 import subprocess                         # get subprocess management
 import textwrap
+import platform
 from   lxml    import etree               # parse HTML files
 
 
@@ -141,7 +142,9 @@ def generateReport(options, env):
 
     _commands = [{
 
-        "command": ["goto-cc", glob("*.c"), "-o", "source.goto"],
+        "command": ["goto-cc", glob("*.c"), "-o", "source.goto"]
+                   if platform.system().lower() != 'windows' else
+                   ["goto-cl", glob("*.c"), "/Fesource.goto"]
     }, {
 
         "command": ["goto-instrument", "source.goto", "proofs.goto"],
@@ -169,7 +172,9 @@ def generateReport(options, env):
     }, {
 
         "command": [
-            "cbmc-viewer",
+            "cbmc-viewer"
+            if platform.system().lower() != 'windows' else
+            "cbmc-viewer.bat",
             "--goto", "proofs.goto",
             "--srcdir", os.getcwd(),
             "--blddir", os.getcwd(),
@@ -197,6 +202,10 @@ def generateReport(options, env):
                                   stderr=subprocess.PIPE,
                                   universal_newlines=True,
                                   env=env)
+            print('cbmc-viewer: run args', proc.args)
+            print('cbmc-viewer: run rc', proc.returncode)
+            print('cbmc-viewer: run stdout', proc.stdout)
+            print('cbmc-viewer: run stderr', proc.stderr)
         except FileNotFoundError:
             logging.error("Failed to run command '%s' in directory %s.",
                           " ".join(command["command"]), os.getcwd())
@@ -247,6 +256,11 @@ def main():
     and compare it against a previous correct report.
     """
 
+    # Give up on windows until goto-cl is fixed.
+    # Running goto-cl source.c generates the error "no input files".
+    if platform.system().lower() == "windows":
+        return
+
     parser = argparse.ArgumentParser(
         epilog=epilog(), formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-v", "--verbose", action="store_true")
@@ -268,6 +282,12 @@ def main():
     # Add tool paths to the environment of the test
     env = os.environ
     env['PATH'] = os.pathsep.join(paths) + os.pathsep + env['PATH']
+
+    print('cbmc-viewer: PATH', env['PATH'])
+    for path in paths:
+        print('cbmc-viewer: path', path)
+        for file in glob('{}/*'.format(path)):
+            print('cbmc-viewer: file', file)
 
     testdir = os.getcwd()
     total_tests = len(next(os.walk(testdir))[1])

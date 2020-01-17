@@ -8,13 +8,17 @@ env:
 phases:
   install:
     commands:
+      # Use installed python, don't install cygwin python, to avoid conflicts
+      - echo (get-command python).path
+      - set-variable -name python_path -value (get-command python).path
+      - set-variable -name python_folder (split-path -parent $python_path)
+      - new-item -itemtype symboliclink -path "$python_folder\python3.exe" -target "$python_path"
+      - echo (get-command python3).path
+      - python3 --version
+      - python3 -m pip install lxml
       - choco install cyg-get -y --no-progress
       - cyg-get bash patch bison flex make wget perl jq
       - nuget install clcache -OutputDirectory "c:\tools" -ExcludeVersion -Version 4.1.0
-      - cyg-get python3 python3-pip
-      - |
-        $env:Path = "C:\tools\cygwin\bin;$env:Path"
-        python3 -m pip install lxml
 
   build:
     commands:
