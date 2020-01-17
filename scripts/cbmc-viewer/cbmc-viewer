@@ -353,6 +353,8 @@ def main():
 if __name__ == "__main__":
     # pylint: disable=bare-except
     try:
+        import sys
+        print("CBMC-Viewer python version: ", sys.version)
         main()
     except SystemExit:
         pass
