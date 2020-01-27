@@ -1,0 +1,116 @@
+#!/usr/bin/env python3
+
+# -*- mode: python-mode -*-
+
+"""Gather names of source files used to buid a goto binary."""
+
+import json
+import argparse
+
+import sourcet
+
+################################################################
+# Argument parsing
+
+def create_parser():
+    """Build the command line parser."""
+
+    arg = argparse.ArgumentParser(
+        description='Source files used to build a goto program.')
+
+    arg.add_argument(
+        '--root',
+        metavar='DIR',
+        help="""
+        The root of the source tree.
+        """
+    )
+    arg.add_argument(
+        '--build',
+        metavar='DIR',
+        help="""
+	The build directory.
+	The command "make GOTO_CC=goto-cc cbmc"
+        in this directory should build the goto program.
+        Use 'make' to build the list of source files
+        under root.
+	"""
+    )
+    arg.add_argument(
+        '--find',
+        action='store_true',
+        help="""
+        Use the Linux 'find' command to build the list
+        of source files under 'root'.  Default is to use find on
+        Linux and MacOS if --build is not given.
+	"""
+    )
+    arg.add_argument(
+        '--walk',
+        action='store_true',
+        help="""
+        Use the Python 'os.walk' method to build the list
+        of source files under 'root'.  Walk is slower than find,
+        but find does not exist on Windows.  Default is to use walk on
+        Windows if --build is not given.
+	"""
+    )
+    arg.add_argument(
+        '--sources',
+        metavar='FILE',
+        help="""
+        The output of the 'make-sources' command (a json file).
+        Reload symbol data from this file.
+	"""
+    )
+    arg.add_argument(
+        '--extensions',
+        metavar='RE',
+        help="""
+        The file extensions of files to search for symbols.
+        It is a Python regular expression like '[ch]' that matches
+        all .c and .h files.  Only files
+        with file extensions matching this regular expression are
+        searched.  The match is case insensitive.  When --find or --walk
+        is specified, the default is to use
+        .c and .h and .ini as the file extensions.
+        """
+    )
+    arg.add_argument(
+        '--exclude',
+        metavar='RE',
+        help="""
+        The files under root to exclude from the search for symbols.
+        It is a Python regular expression like 'foo|bar/baz' that matches
+        files with paths relative to root beginning with foo and bar/baz.
+        Only files not matching this regular expression are searched.
+        The match is case insensitive.
+        """
+    )
+    arg.add_argument(
+        '--merge',
+        metavar='FILE',
+        nargs='+',
+        help="""
+        A list of files produced by this program to merge
+        into a single file (a summary).
+        """
+    )
+    return arg
+
+def main():
+    """Gather names of source files used to buid a goto binary."""
+
+    args = create_parser().parse_args()
+    if args.merge:
+        print(json.dumps(sourcet.merge(args.merge), indent=2))
+        exit()
+
+    sources = sourcet.Source(sources=args.sources,
+                             build=args.build, root=args.root,
+                             walk=args.walk, find=args.find,
+                             extensions=args.extensions, exclude=args.exclude)
+    print(sources.dump())
+
+if __name__ == '__main__':
+    main()

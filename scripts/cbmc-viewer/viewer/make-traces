@@ -1,0 +1,82 @@
+#!/usr/bin/env python3
+
+# -*- mode: python-mode -*-
+
+#pylint: disable=missing-docstring
+
+import argparse
+import logging
+
+import tracet
+
+def parse_arguments():
+    """Parse command line options."""
+
+    parser = argparse.ArgumentParser(
+        description='Scan traces of a cbmc verification.'
+    )
+    parser.add_argument(
+        '--root',
+        default='.',
+        metavar='DIR',
+        help='Root of the source tree.'
+    )
+    parser.add_argument(
+        '--wkdir',
+        default='.',
+        metavar='DIR',
+        help='Working directory (where cbmc was run).'
+    )
+    parser.add_argument(
+        '--load',
+        metavar='FILE',
+        help='Load trace data from a json file written by this program.'
+    )
+    parser.add_argument(
+        '--text',
+        metavar='FILE',
+        help='Parse trace data from text output from CBMC.'
+    )
+    parser.add_argument(
+        '--xml',
+        metavar='FILE',
+        help='Parse trace data from xml output from CBMC.'
+    )
+    parser.add_argument(
+        '--json',
+        metavar='FILE',
+        help='Parse trace data from json output from CBMC.'
+    )
+
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output.'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug output.'
+    )
+
+    return parser.parse_args()
+
+################################################################
+
+def main():
+    args = parse_arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    trace = tracet.Trace(traces=args.load,
+                         txtfile=args.text,
+                         xmlfile=args.xml,
+                         jsonfile=args.json,
+                         root=args.root,
+                         wkdir=args.wkdir)
+    print(trace.dump())
+
+if __name__ == "__main__":
+    main()

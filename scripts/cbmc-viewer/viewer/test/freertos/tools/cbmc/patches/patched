@@ -1,0 +1,10 @@
+Success:
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0001-Remove-static-storage-class-from-entry-points.patch
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0007-Remove-static-from-prvUnlockQueue.patch
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0002-Change-FreeRTOS_IP_Private.h-union-to-struct.patch
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0005-remove-static-from-prvCopyDataToQueue.patch
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0006-Remove-static-from-prvNotifyQueueSetContainer.patch
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0005-Remove-volatile-qualifier-from-tasks-variables.patch
+	/Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/patches/0004-Refactor-prvCheckOptions-make-functions-of-inner-and.patch
+Failure:
+
