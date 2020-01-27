@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+# -*- mode: python-mode -*-
+
+#pylint: disable=missing-docstring
+
+import argparse
+
+import symbolt
+import sourcet
+
+################################################################
+
+def parse_arguments():
+    """Parse command line options."""
+
+    parser = argparse.ArgumentParser(
+        description='Source locations of symbols in a goto program.'
+    )
+    parser.add_argument(
+        '--sources',
+        metavar='FILE',
+        help="""
+        The output of the 'make-sources' command (a json file).  More generally,
+        a json file with a key 'root' giving the root of the source
+        tree and a key 'files' giving the list of files under root to
+        scan for symbols.  The files may be specified as either
+        absolute paths or paths relative to root.
+        """
+    )
+    parser.add_argument(
+        '--root',
+        default='.',
+        metavar='DIR',
+        help='The root of the source tree.'
+    )
+    parser.add_argument(
+        '--files',
+        nargs='*',
+        metavar='FILE',
+        help="""
+        The list of files under root to scan for symbols.  The files
+        may be specified as either absolute paths or paths relative to
+        root.
+        """
+    )
+    parser.add_argument(
+        '--symbols',
+        metavar='FILE',
+        help="""
+        The output of the 'make-symbols' command (a json file).
+        Reload symbol data from this file.
+        """
+    )
+
+    args = parser.parse_args()
+    return args
+
+################################################################
+
+def main():
+    args = parse_arguments()
+
+    if args.symbols:
+        symbols = symbolt.Symbol(symbols=args.symbols)
+    if args.sources:
+        sources = sourcet.Source(sources=args.sources)
+        symbols = symbolt.Symbol(root=sources.root, files=sources.files)
+    elif args.root and args.files:
+        symbols = symbolt.Symbol(root=args.root, files=args.files)
+    else:
+        print("Unable to generate symbols: No source files specified.")
+        return
+    print(symbols.dump())
+
+if __name__ == "__main__":
+    main()

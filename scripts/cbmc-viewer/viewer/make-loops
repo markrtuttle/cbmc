@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+
+# -*- mode: python-mode -*-
+
+#pylint: disable=missing-docstring
+
+import argparse
+import logging
+
+import loopt
+
+################################################################
+
+def parse_arguments():
+    """Parse cbmc loop nameing data."""
+
+    parser = argparse.ArgumentParser(
+        description='Scan cbmc results'
+    )
+    parser.add_argument(
+        '--root',
+        default='.',
+        metavar='DIR',
+        help='Root of the source tree'
+    )
+    parser.add_argument(
+        '--load',
+        metavar='FILE',
+        help='Load data from a json file written by this program.'
+    )
+    parser.add_argument(
+        '--xml',
+        metavar='FILE',
+        help='Parse loop data from xml loop output from CBMC.'
+    )
+    parser.add_argument(
+        '--json',
+        metavar='FILE',
+        help='Parse loop data from json loop output from CBMC.'
+    )
+    parser.add_argument(
+        '--goto',
+        metavar='GOTO',
+        help='Parse loop data from goto binary.'
+    )
+
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output.'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug output.'
+    )
+
+    return parser.parse_args()
+
+################################################################
+
+def main():
+    args = parse_arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    loops = loopt.Loop(loops=args.load,
+                       xmlfile=args.xml,
+                       jsonfile=args.json,
+                       goto=args.goto,
+                       root=args.root)
+    print(loops.dump())
+
+if __name__ == "__main__":
+    main()
