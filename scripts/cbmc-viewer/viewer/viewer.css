@@ -1,0 +1,76 @@
+.coverage table td
+{
+    padding-right: 1em;
+}
+
+.coverage table th
+{
+    padding-right: 1em;
+    text-align: left;
+}
+
+/****************************************************************/
+
+.code .line
+{
+    font-family: monospace;
+    white-space: pre;
+}
+
+.code .line.hit,
+.code .line.hit a
+{
+    color: green;
+}
+
+.code .line.missed,
+.code .line.missed a
+{
+    color: red;
+}
+
+.code .line.both,
+.code .line.both a
+{
+    color: orange;
+}
+
+/****************************************************************/
+
+
+.trace div.block
+{
+    display: inline;
+}
+
+.trace div.block.hidden
+{
+    display: none;
+}
+
+.trace .step
+{
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.trace .step .cbmc,
+.trace .step .header,
+.trace .step .code
+{
+    font-family: monospace;
+    white-space: pre;
+}
+
+.trace .step .cbmc,
+.trace .step .code
+{
+    margin-left: 1em;
+}
+
+/*
+.trace .function-call
+{
+    margin-left: 5em;
+}
+*/

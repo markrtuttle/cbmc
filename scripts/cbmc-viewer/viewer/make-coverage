@@ -1,0 +1,71 @@
+#!/usr/bin/env python3
+
+# -*- mode: python-mode -*-
+
+#pylint: disable=missing-docstring
+
+import argparse
+import logging
+
+import coveraget
+
+################################################################
+
+def parse_arguments():
+    """Parse command line options."""
+
+    parser = argparse.ArgumentParser(
+        description='Collect coverage data for a project'
+    )
+    parser.add_argument(
+        '--root',
+        default='.',
+        metavar='DIR',
+        help='Root of the source tree.'
+    )
+    parser.add_argument(
+        '--load',
+        metavar='FILE',
+        help='Load data from a json file written by this program.'
+    )
+    parser.add_argument(
+        '--xml',
+        metavar='FILE',
+        help='Parse coverage data from xml coverage output from CBMC.'
+    )
+    parser.add_argument(
+        '--json',
+        metavar='FILE',
+        help='Parse coverage data from json coverage output from CBMC.'
+    )
+
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output.'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug output.'
+    )
+
+    return parser.parse_args()
+
+################################################################
+
+def main():
+    args = parse_arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
+    coverage = coveraget.Coverage(coverage=args.load,
+                                  xmlfile=args.xml,
+                                  jsonfile=args.json,
+                                  root=args.root)
+    print(coverage.dump())
+
+if __name__ == "__main__":
+    main()

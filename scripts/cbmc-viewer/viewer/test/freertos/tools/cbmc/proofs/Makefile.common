@@ -1,0 +1,224 @@
+FREERTOS = /Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos
+PROOFS = /Users/mrtuttle/cbmc/scripts/cbmc-viewer/make/test/freertos/tools/cbmc/proofs
+C_INC = \
+	-I$(FREERTOS)/vendors/pc/boards/windows/aws_demos/config_files \
+	-I$(FREERTOS)/vendors/pc/boards/windows/aws_demos/application_code \
+	-I$(FREERTOS)/demos/include \
+	-I$(FREERTOS)/freertos_kernel/include \
+	-I$(FREERTOS)/freertos_kernel/portable/MSVC-MingW \
+	-I$(FREERTOS)/libraries/freertos_plus/standard/freertos_plus_tcp/include \
+	-I$(FREERTOS)/libraries/freertos_plus/standard/freertos_plus_tcp/source/portable/BufferManagement \
+	-I$(FREERTOS)/libraries/freertos_plus/standard/freertos_plus_tcp/source/portable/Compiler/MSVC \
+	-I$(FREERTOS)/libraries/freertos_plus/aws/ota/include \
+	-I$(FREERTOS)/libraries/3rdparty/mbedtls/include/mbedtls \
+	-I$(FREERTOS)/libraries/3rdparty/tracealyzer_recorder/Include \
+	-I$(FREERTOS)/libraries/3rdparty/jsmn \
+	-I$(FREERTOS)/libraries/3rdparty/pkcs11 \
+	-I$(FREERTOS)/libraries/3rdparty/tinycbor \
+	-I$(FREERTOS)/libraries/3rdparty/win_pcap \
+	-I$(FREERTOS)/libraries/c_sdk/standard/serializer/src/cbor \
+	-I$(FREERTOS)/libraries/c_sdk/aws/defender/include \
+	-I$(FREERTOS)/tools/cbmc/include \
+	# empty
+
+C_DEF = \
+	-D_DEBUG \
+	-D__free_rtos__ \
+	-D_CONSOLE \
+	-D_WIN32_WINNT=0x0500 \
+	-DWINVER=0x400 \
+	-D_CRT_SECURE_NO_WARNINGS \
+	-D__PRETTY_FUNCTION__=__FUNCTION__ \
+	-D'configASSERT(X)=__CPROVER_assert(X,"Assertion Error")' \
+	-D'configPRECONDITION(X)=__CPROVER_assume(X)' \
+	# empty
+
+C_CBMCFLAGS = \
+	--object-bits 7 \
+	--32 \
+	--bounds-check \
+	--pointer-check \
+	# empty
+
+O_INC = \
+	-I$(PROOFS)/../windows \
+	# empty
+
+default: cbmc
+
+# ____________________________________________________________________
+# CBMC binaries
+#
+
+GOTO_CC = goto-cc
+GOTO_INSTRUMENT = goto-instrument
+GOTO_ANALYZER = goto-analyzer
+VIEWER = cbmc-viewer
+
+# ____________________________________________________________________
+# Variables
+#
+# Naming scheme:
+# ``````````````
+# FOO is the concatenation of the following:
+# FOO2: Set of command line
+# C_FOO: Value of $FOO common to all harnesses, set in this file
+# O_FOO: Value of $FOO specific to the OS we're running on, set in the
+#        makefile for the operating system
+# H_FOO: Value of $FOO specific to a particular harness, set in the
+#        makefile for that harness
+
+ENTRY = $(H_ENTRY)
+OBJS = $(H_OBJS)
+
+INC = \
+  $(INC2) \
+  $(C_INC) $(O_INC) $(H_INC) \
+  # empty
+
+CFLAGS = \
+  $(CFLAGS2) \
+  $(C_DEF) $(O_DEF) $(H_DEF) $(DEF) \
+  $(C_OPT) $(O_OPT) $(H_OPT) $(OPT) \
+  -m32 \
+  # empty
+
+CBMCFLAGS = \
+  $(CBMCFLAGS2) \
+  $(C_CBMCFLAGS) $(O_CBMCFLAGS) $(H_CBMCFLAGS) \
+  # empty
+
+INSTFLAGS = \
+  $(INSTFLAGS2) \
+  $(C_INSTFLAGS) $(O_INSTFLAGS) $(H_INSTFLAGS) \
+  # empty
+
+# ____________________________________________________________________
+# Rules
+#
+# Rules for building a:FR object files. These are not harness-specific,
+# and several harnesses might depend on a particular a:FR object, so
+# define them all once here.
+
+%.goto : %.c
+	$(GOTO_CC) -c -o $@ $(INC) $(CFLAGS) $<
+
+# ____________________________________________________________________
+# Rules
+#
+# Rules for patching
+
+patch:
+	cd $(PROOFS)/../patches && ./patch.py
+
+unpatch:
+	cd $(PROOFS)/../patches && ./unpatch.py
+
+# ____________________________________________________________________
+# Rules
+#
+# Rules for building the CBMC harness
+
+queue_datastructure.h: $(filter-out $(ENTRY)_harness.goto, $(OBJS))
+	python3 $(PROOFS)/make_type_header_files.py --binary $(FREERTOS)/freertos_kernel/queue.goto --c-file $(FREERTOS)/freertos_kernel/queue.c
+
+$(ENTRY)_harness.goto: $(ENTRY)_harness.c $(filter-out $(ENTRY)_harness.goto, $(OBJS)) $(H_GENERATE_HEADER)
+	$(GOTO_CC) -c -o $@ $(INC) $(CFLAGS) $<
+
+$(ENTRY)1.goto: $(OBJS)
+	$(GOTO_CC) -o $@ --function harness $(OBJS)
+
+$(ENTRY)2.goto: $(ENTRY)1.goto
+	 $(GOTO_INSTRUMENT) --add-library $< $@ \
+		> $(ENTRY)2.txt 2>&1
+
+$(ENTRY)3.goto: $(ENTRY)2.goto
+	$(GOTO_INSTRUMENT) --drop-unused-functions $< $@ \
+		> $(ENTRY)3.txt 2>&1
+
+$(ENTRY)4.goto: $(ENTRY)3.goto
+	$(GOTO_INSTRUMENT) $(INSTFLAGS) --slice-global-inits $< $@ \
+		> $(ENTRY)4.txt 2>&1
+# ____________________________________________________________________
+# After running goto-instrument to remove function bodies the unused
+# functions need to be dropped again.
+
+$(ENTRY)5.goto: $(ENTRY)4.goto
+	$(GOTO_INSTRUMENT) --drop-unused-functions $< $@ \
+		> $(ENTRY)5.txt 2>&1
+
+$(ENTRY).goto: $(ENTRY)5.goto
+	cp $< $@
+
+# ____________________________________________________________________
+# Rules
+#
+# Rules for running CBMC
+
+goto:
+	$(MAKE) patch
+	$(MAKE) $(ENTRY).goto
+
+cbmc.txt: $(ENTRY).goto
+	cbmc $(CBMCFLAGS) --unwinding-assertions --trace $< > $@ 2>&1
+
+property.xml: $(ENTRY).goto
+	cbmc $(CBMCFLAGS) --unwinding-assertions --show-properties --xml-ui $< \
+	  2>&1 > $@
+
+coverage.xml: $(ENTRY).goto
+	cbmc $(CBMCFLAGS) --cover location --xml-ui $< 2>&1 > $@
+
+cbmc: cbmc.txt
+
+property: property.xml
+
+coverage: coverage.xml
+
+report: cbmc.txt property.xml coverage.xml
+	$(VIEWER) \
+	--goto $(ENTRY).goto \
+	--srcdir $(FREERTOS) \
+	--blddir $(FREERTOS) \
+	--htmldir html \
+	--srcexclude "(./doc|./tests|./vendors)" \
+	--result cbmc.txt \
+	--property property.xml \
+	--block coverage.xml
+
+# ____________________________________________________________________
+# Rules
+#
+# Rules for cleaning up
+
+clean:
+	$(RM) $(OBJS) $(ENTRY).goto
+	$(RM) $(ENTRY)[0-9].goto $(ENTRY)[0-9].txt
+	$(RM) cbmc.txt property.xml coverage.xml TAGS
+	$(RM) *~ \#*
+	$(RM) queue_datastructure.h
+
+
+veryclean: clean
+	$(RM) -r html
+
+distclean: veryclean
+	cd $(PROOFS)/../patches && ./unpatch.py
+	cd $(PROOFS) && ./make-remove-makefiles.py
+
+################################################################
+# Build configuration file to run cbmc under cbmc-batch in CI
+
+define encode_options
+'=$(shell echo $(1) | sed 's/ ,/ /g' | sed 's/ /;/g')='
+endef
+
+cbmc-batch.yaml:
+	@echo "Building $@"
+	@$(RM) $@
+	@echo "jobos: ubuntu16" >> $@
+	@echo "cbmcflags: $(call encode_options,$(CBMCFLAGS) --unwinding-assertions)" >> $@
+	@echo "goto: $(ENTRY).goto" >> $@
+	@echo "expected: $(H_EXPECTED)" >> $@
+
+################################################################
