@@ -49,7 +49,9 @@ def run(cmd, verbose=False, cwd=None):
     if verbose:
         print('Running: {}'.format(' '.join(cmd)))
 
-    result = subprocess.run(cmd, capture_output=True, text=True, cwd=cwd)
+    result = subprocess.run(cmd,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True, cwd=cwd)
     if result.returncode:
         debug = {'command': result.args,
                  'returncode': result.returncode,
