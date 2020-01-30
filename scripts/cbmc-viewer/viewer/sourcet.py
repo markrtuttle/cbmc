@@ -182,7 +182,7 @@ def build_source_files(output, directory=None):
              if line.strip().startswith('#')]
     files = [name.strip('"') for name in files]
     files = [name for name in files
-             if name not in ['<built-in>', '<command']]
+             if name not in ['<built-in>', '<command-line>']]
     if directory:
         files = [os.path.abspath(os.path.join(directory, name))
                  for name in files]
@@ -207,6 +207,9 @@ def sloc(files, root=None):
     command = ['sloc', '-f', 'json'] + files
     try:
         result = runt.run(command, root)
+    except FileNotFoundError as error:
+        logging.info("Unable to run sloc: %s", error.strerror)
+        return None
     except OSError as error:
         if error.errno != 7: # Argument list too long
             raise

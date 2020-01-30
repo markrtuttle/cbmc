@@ -13,7 +13,8 @@ def run(cmd, cwd=None, ignored=None, verbose=False):
         print('Running: {}'.format(' '.join(cmd)))
 
     result = subprocess.run(cmd, cwd=cwd,
-                            capture_output=True, universal_newlines=True)
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            universal_newlines=True)
 
     if result.returncode:
         logging.debug('Error running command. %s', result)
