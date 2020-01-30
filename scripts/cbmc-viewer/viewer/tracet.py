@@ -114,12 +114,13 @@ def parse_text_traces(textfile, root=None, wkdir=None):
     return traces
 
 def parse_text_assignment(string):
-    match = re.match(r'([^=]+)=(.+) \(([01 ]+)\)', string.strip())
+    # trailing binary expression (exp) may be integer, struct, or unknown ?
+    match = re.match(r'([^=]+)=(.+) \(([?{},01 ]+)\)', string.strip())
     if match:
-        return match.groups()[:3]
+        return list(match.groups()[:3])
     match = re.match('([^=]+)=(.+)', string.strip())
     if match:
-        return match.groups()[:2] + [None]
+        return list(match.groups()[:2]) + [None]
     raise UserWarning("Can't parse assignment: {}".format(string))
 
 def parse_text_state(block, root=None, wkdir=None):
@@ -127,7 +128,8 @@ def parse_text_state(block, root=None, wkdir=None):
     srcloc = locationt.parse_text_srcloc(
         lines[0], root=root, wkdir=wkdir, asdict=True
     )
-    lhs, rhs_value, rhs_binary = parse_text_assignment(lines[2])
+    # assignment may be split over remaining lines in block
+    lhs, rhs_value, rhs_binary = parse_text_assignment(' '.join(lines[2:]))
     return {
         'kind': 'variable-assignment',
         'location': srcloc,

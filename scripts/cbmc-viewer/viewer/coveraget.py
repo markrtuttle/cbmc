@@ -173,7 +173,16 @@ def parse_goal(coverage, fullpaths, description, status, srcloc):
     # will be relative to root and desc_path will be either absolute or
     # relative to a working directory.  We want to use the loc_path
     # relative to root.
-    assert desc_func == loc_func
+    # assert desc_func == loc_func
+
+    # This expectation can be violated in several ways:
+    # function versus function$link1 for inlined functions
+    # Atomic_CompareAndSwap_u32 __atomic_compare_exchange_vU32 for intrinsics
+    # So we will prefer the description name over the source location name
+    if desc_func != loc_func:
+        print("Using function name {} in place of {}".format(desc_func, loc_func))
+        loc_func = desc_func
+
     fullpaths[desc_path] = loc_path
 
     for line in desc_lines:
