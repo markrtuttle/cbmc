@@ -115,6 +115,12 @@ def parse_text_srcloc(sloc, root=None, asdict=False, wkdir=None):
         path, line, func = match.groups()[:3]
         return parse_srcloc(make_srcloc(path, func, line, wkdir), root, asdict)
 
+    # Some models of intrinsic functions omit file and line
+    match = re.search('function (.+)', sloc)
+    if match:
+        path, func, line = '<intrinsic>', match.groups(0), 0
+        return parse_srcloc(make_srcloc(path, func, line, wkdir), root, asdict)
+
     logging.debug("No source location found in %s", sloc)
     return None
 
