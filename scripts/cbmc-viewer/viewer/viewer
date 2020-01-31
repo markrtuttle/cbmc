@@ -370,12 +370,12 @@ def main():
                 os.path.join(args.htmldir, 'viewer.css'))
 
     config = viewerconfig.Config(args.config)
-    markup_reportt.format_report(coverage, symbols, results, properties, config)
+    markup_reportt.format_report(coverage, symbols, results, properties, config, htmldir=args.htmldir)
 
-    markup_source = markup_sourcet.MarkupSource(sources, symbols, coverage)
+    markup_source = markup_sourcet.MarkupSource(sources, symbols, coverage, htmldir=args.htmldir)
     markup_source.markup_files(sources.root, sources.files)
 
-    markup_trace = markup_tracet.MarkupTrace(sources, symbols, traces)
+    markup_trace = markup_tracet.MarkupTrace(sources, symbols, traces, htmldir=args.htmldir)
     markup_trace.markup_traces()
 
 if __name__ == '__main__':
