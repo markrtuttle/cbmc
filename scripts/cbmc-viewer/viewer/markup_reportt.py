@@ -1,3 +1,5 @@
+import os
+
 import markupt
 
 def functions_by_decreasing_coverage(coverage):
@@ -152,8 +154,8 @@ def warning_section(results, config):
 
 ################################################################
 
-def format_report(coverage, symbols, results, properties, config):
-    with open('html/index.html', 'w') as html:
+def format_report(coverage, symbols, results, properties, config, htmldir='html'):
+    with open(os.path.join(htmldir, 'index.html'), 'w') as html:
         html.write(
             HTML.format(
                 title="CBMC",

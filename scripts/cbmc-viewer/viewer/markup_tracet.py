@@ -43,14 +43,15 @@ class CodeSnippet:
 ################################################################
 
 class MarkupTrace:
-    def __init__(self, sources, symbols, traces):
+    def __init__(self, sources, symbols, traces, htmldir='html'):
         self.sources = sources
         self.symbols = symbols
         self.traces = traces
         self.snippet = CodeSnippet(sources.root)
+        self.htmldir = htmldir
 
     def markup_traces(self):
-        os.makedirs('html/traces', exist_ok=True)
+        os.makedirs(os.path.join(self.htmldir, 'traces'), exist_ok=True)
         for name, trace in self.traces.traces.items():
             self.markup_trace(name, trace)
 
@@ -58,7 +59,7 @@ class MarkupTrace:
         html = []
         for num, step in enumerate(trace):
             html.append(self.markup_step(step, num+1))
-        with open('html/traces/{}.html'.format(name), 'w') as data:
+        with open(os.path.join(self.htmldir, 'traces', '{}.html'.format(name)), 'w') as data:
             data.write(HTML.format(name=name, trace='\n'.join(html)))
 
     def markup_step(self, step, num=0):
