@@ -136,9 +136,9 @@ def run_etags(root, files):
         files = files[100:]
         run([ETAGS, '-o', TAGS, '--append'] + paths, cwd=root)
 
-    with open(TAGS) as etags_file:
+    with open(os.path.join(root, TAGS)) as etags_file:
         etags_data = etags_file.read()
-    os.remove(TAGS)
+    os.remove(os.path.join(root, TAGS))
     return etags_data
 
 def etags_symbols(etags_data):
