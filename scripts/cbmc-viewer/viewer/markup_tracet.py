@@ -82,6 +82,8 @@ class MarkupTrace:
         #)
 
         html = []
+        if step['kind'] == 'function-return':
+            html.append('</div>')
         html.append('<div id="step{}" class="step">'.format(num))
         html.append('<div class="header">Step {}: {}</div>'.format(num, srcloc))
         if code:
@@ -90,8 +92,6 @@ class MarkupTrace:
         html.append('</div>')
         if step['kind'] == 'function-call':
             html.append('<div class="function-call">')
-        if step['kind'] == 'function-return':
-            html.append('</div>')
 
         return '\n'.join(html)
 
@@ -107,11 +107,18 @@ class MarkupTrace:
 
 def markup_function_call(step):
     name, srcloc = step['detail']['name'], step['detail']['location']
-    return '-> {}'.format(markupt.link_text_to_srcloc(name, srcloc, './trace/trace.html'))
+
+    line = '-> {}'.format(
+        markupt.link_text_to_srcloc(name, srcloc, './trace/trace.html')
+    )
+    return line
 
 def markup_function_return(step):
     name, srcloc = step['detail']['name'], step['detail']['location']
-    return '<- {}'.format(markupt.link_text_to_srcloc(name, srcloc, './trace/trace.html'))
+    line = '<- {}'.format(
+        markupt.link_text_to_srcloc(name, srcloc, './trace/trace.html')
+    )
+    return line
 
 def markup_variable_assignment(step):
     asn = step['detail']
