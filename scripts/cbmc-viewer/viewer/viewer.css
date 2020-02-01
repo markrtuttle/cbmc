@@ -68,9 +68,11 @@
     margin-left: 1em;
 }
 
-/*
 .trace .function-call
 {
-    margin-left: 5em;
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: blue;
+    margin-left: 1em;
+    padding-left: .5em;
 }
-*/
