@@ -62,6 +62,10 @@ class Trace:
             logging.info("No trace data found")
             return
         self.traces = parser(data, root, wkdir)
+        self.traces = {name: insert_builtin_function_returns(trace)
+                       for name, trace in self.traces.items()}
+        self.traces = {name: close_function_stack_frames(trace)
+                       for name, trace in self.traces.items()}
 
     def dump(self):
         return json.dumps(self.traces, indent=2, sort_keys=True)
@@ -369,6 +373,126 @@ def parse_xml_function_return(step, root=None):
 def parse_xml_location_only(step, root=None):
     _ = step
     _ = root
+
+################################################################
+
+def insert_builtin_function_returns(trace):
+    """Insert function returns for cbmc builtins into traces.
+
+    The json and xml traces from cbmc include function-call
+    and function-return steps, but function-returns for the
+    cbmc builtin functions like malloc are missing from the
+    trace.  This function inserts those missing returns so
+    that function calls and returns are properly nested."""
+
+    new_trace = []
+    callee_location = None
+    builtin_path, builtin_name = None, None
+    current_location, prior_location = None, None
+
+    for step in trace:
+        prior_location = current_location
+        current_location = step['location']
+        kind = step['kind']
+        path = step.get('detail', {}).get('location', {}).get('file')
+
+        if kind == 'function-call' and path and path.startswith('<builtin-library-'):
+            logging.info("Trace: found builtin function call: %s", path)
+            callee_location = step['detail']['location']
+            builtin_path = path
+            builtin_name = path[len('<builtin-library-'):-1]
+            new_trace.append(step)
+            continue
+
+        if builtin_path and kind == 'parameter-assignment':
+            logging.info("Trace: found builtin parameter assignment: %s",
+                         builtin_path)
+            new_trace.append(step)
+            continue
+
+        if builtin_path and step['location']['file'] == builtin_path:
+            assert kind != 'function-call'
+            assert kind != 'function-return'
+            logging.info("Trace: found builtin step: %s", builtin_path)
+            new_trace.append(step)
+            continue
+
+        if builtin_path:
+            logging.info("Trace: inserting builtin function return: %s",
+                         builtin_path)
+            function_return = {
+                "detail": {
+                    "location": callee_location,
+                    "name": builtin_name
+                },
+                "kind": "function-return",
+                "location": prior_location
+            }
+            new_trace.append(function_return)
+            new_trace.append(step)
+            callee_location = None
+            builtin_path, builtin_name = None, None
+            continue
+
+        new_trace.append(step)
+
+    return new_trace
+
+################################################################
+
+def close_function_stack_frames(trace):
+    """Append function-return steps missing from end of a trace.
+
+    The json and xml traces from cbmc include function-call
+    and function-return steps, but each error trace ends with
+    a failure and omits the function returns for the function
+    calls remaining on the call stack.  This appends these
+    missing function returns to the end of the trace so that
+    all function calls are properly nested and bracketed with
+    call/return steps."""
+
+    stack = []
+
+    def push_stack(stack, elt):
+        stack.append(elt)
+        return stack
+
+    def pop_stack(stack):
+        assert stack
+        return stack[-1], stack[:-1]
+
+    location = None
+    for step in trace:
+        kind = step['kind']
+        location = step['location']
+        callee_name = step.get('detail', {}).get('name')
+        callee_location = step.get('detail', {}).get('location')
+
+        if kind == 'function-call':
+            stack = push_stack(stack, (callee_name, callee_location))
+            continue
+
+        if kind == 'function-return':
+            pair, stack = pop_stack(stack)
+            callee_name_, _ = pair
+            assert callee_name == callee_name_
+            continue
+
+    stack.reverse()
+    for callee_name, callee_location in stack:
+        function_return = {
+            "detail": {
+                "location": callee_location,
+                "name": callee_name
+            },
+            "kind": "function-return",
+            "location": location
+        }
+        trace.append(function_return)
+
+    return trace
+
+################################################################
 
 #step type
 #
