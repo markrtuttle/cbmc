@@ -125,6 +125,14 @@ def parse_text_srcloc(sloc, root=None, asdict=False, wkdir=None):
     return None
 
 def parse_json_srcloc(sloc, root=None, asdict=False):
+    # json output omits source locations in traces
+    if sloc is None:
+        logging.info("Found null srcloc in json output from cbmc")
+        sloc = {'file': os.path.join(root, 'MISSING'),
+                'function': 'MISSING',
+                'line': 0,
+                'workingDirectory': root}
+
     return parse_srcloc(
         make_srcloc(
             sloc.get('file'),
@@ -137,6 +145,14 @@ def parse_json_srcloc(sloc, root=None, asdict=False):
     )
 
 def parse_xml_srcloc(sloc, root=None, asdict=False):
+    # json output omits source locations in traces, maybe xml does, too
+    if sloc is None:
+        logging.info("Found null srcloc in xml output from cbmc")
+        sloc = {'file': os.path.join(root, 'MISSING'),
+                'function': 'MISSING',
+                'line': 0,
+                'workingDirectory': root}
+
     return parse_srcloc(
         make_srcloc(
             sloc.get('file'),
