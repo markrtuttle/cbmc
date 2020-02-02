@@ -82,16 +82,29 @@ class MarkupTrace:
         #)
 
         html = []
+
+        if step['kind'] == 'function-call':
+            html.append('<div class="function">')
+            html.append('<div class="function-call">')
+
         if step['kind'] == 'function-return':
-            html.append('</div>')
+            html.append('</div>') # end function-body
+            html.append('<div class="function-return">')
+
         html.append('<div id="step{}" class="step">'.format(num))
         html.append('<div class="header">Step {}: {}</div>'.format(num, srcloc))
         if code:
             html.append('<div class="code">{}</div>'.format(code))
         html.append('<div class="cbmc">{}</div>'.format(cbmc))
         html.append('</div>')
+
         if step['kind'] == 'function-call':
-            html.append('<div class="function-call">')
+            html.append('</div>') # end function-call
+            html.append('<div class="function-body">')
+
+        if step['kind'] == 'function-return':
+            html.append('</div>') # end function-return
+            html.append('</div>') # end function
 
         return '\n'.join(html)
 
