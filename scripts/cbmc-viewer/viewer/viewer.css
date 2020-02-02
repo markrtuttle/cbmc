@@ -38,16 +38,6 @@
 /****************************************************************/
 
 
-.trace div.block
-{
-    display: inline;
-}
-
-.trace div.block.hidden
-{
-    display: none;
-}
-
 .trace .step
 {
     margin-top: 1em;
@@ -75,4 +65,9 @@
     border-left-color: blue;
     margin-left: 1em;
     padding-left: .5em;
+}
+
+.trace .function-body .hidden
+{
+    display: none;
 }
