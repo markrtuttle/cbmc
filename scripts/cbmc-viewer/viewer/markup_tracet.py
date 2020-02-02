@@ -169,5 +169,6 @@ HTML = """
 {trace}
 </div>
 </body>
+<script type="text/javascript" src="../viewer.js"></script>
 </html>
 """

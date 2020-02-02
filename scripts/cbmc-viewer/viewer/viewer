@@ -368,6 +368,8 @@ def main():
     script_directory = sys.path[0]
     shutil.copy(os.path.join(script_directory, 'viewer.css'),
                 os.path.join(args.htmldir, 'viewer.css'))
+    shutil.copy(os.path.join(script_directory, 'viewer.js'),
+                os.path.join(args.htmldir, 'viewer.js'))
 
     config = viewerconfig.Config(args.config)
     markup_reportt.format_report(coverage, symbols, results, properties, config,
