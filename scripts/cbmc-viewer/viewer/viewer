@@ -96,37 +96,37 @@ def command_line_parser():
         """JSON files produced by the various make-* scripts."""
     )
     viewer_data.add_argument(
-        '--coverage',
+        '--viewer-coverage',
         metavar='FILE',
         help=('Output of make-coverage.')
     )
     viewer_data.add_argument(
-        '--loops',
+        '--viewer-loops',
         metavar='FILE',
         help=('Output of make-loops.')
     )
     viewer_data.add_argument(
-        '--properties',
+        '--viewer-properties',
         metavar='FILE',
         help=('Output of make-properties.')
     )
     viewer_data.add_argument(
-        '--results',
+        '--viewer-results',
         metavar='FILE',
         help=('Output of make-results.')
     )
     viewer_data.add_argument(
-        '--sources',
+        '--viewer-sources',
         metavar='FILE',
         help=('Output of make-sources.')
     )
     viewer_data.add_argument(
-        '--symbols',
+        '--viewer-symbols',
         metavar='FILE',
         help=('Output of make-symbols.')
     )
     viewer_data.add_argument(
-        '--traces',
+        '--viewer-traces',
         metavar='FILE',
         help=('Output of make-traces.')
     )
@@ -139,19 +139,19 @@ def command_line_parser():
         """Output of 'cbmc' with the property-checking results."""
         )
     cbmc_results.add_argument(
-        '--cbmc-result',
+        '--result',
         metavar='FILE'
     )
     cbmc_results.add_argument(
-        '--cbmc-result-txt',
+        '--result-txt',
         metavar='FILE'
     )
     cbmc_results.add_argument(
-        '--cbmc-result-json',
+        '--result-json',
         metavar='FILE'
     )
     cbmc_results.add_argument(
-        '--cbmc-result-xml',
+        '--result-xml',
         metavar='FILE'
     )
 
@@ -161,19 +161,19 @@ def command_line_parser():
         with the coverage-checking results."""
     )
     cbmc_coverage.add_argument(
-        '--cbmc-coverage',
+        '--coverage',
         metavar='FILE'
     )
     cbmc_coverage.add_argument(
-        '--cbmc-coverage-txt',
+        '--coverage-txt',
         metavar='FILE'
     )
     cbmc_coverage.add_argument(
-        '--cbmc-coverage-json',
+        '--coverage-json',
         metavar='FILE'
     )
     cbmc_coverage.add_argument(
-        '--cbmc-coverage-xml',
+        '--coverage-xml',
         metavar='FILE'
     )
 
@@ -183,19 +183,19 @@ def command_line_parser():
         with the list of properties checked."""
         )
     cbmc_property.add_argument(
-        '--cbmc-property',
+        '--property',
         metavar='FILE'
     )
     cbmc_property.add_argument(
-        '--cbmc-property-txt',
+        '--property-txt',
         metavar='FILE'
     )
     cbmc_property.add_argument(
-        '--cbmc-property-json',
+        '--property-json',
         metavar='FILE'
     )
     cbmc_property.add_argument(
-        '--cbmc-property-xml',
+        '--property-xml',
         metavar='FILE'
     )
 
@@ -204,19 +204,19 @@ def command_line_parser():
         """Output of 'cbmc --show-loops' with the list of loops."""
         )
     cbmc_loop.add_argument(
-        '--cbmc-loop',
+        '--loop',
         metavar='FILE'
     )
     cbmc_loop.add_argument(
-        '--cbmc-loop-txt',
+        '--loop-txt',
         metavar='FILE'
     )
     cbmc_loop.add_argument(
-        '--cbmc-loop-json',
+        '--loop-json',
         metavar='FILE'
     )
     cbmc_loop.add_argument(
-        '--cbmc-loop-xml',
+        '--loop-xml',
         metavar='FILE'
     )
 
@@ -238,6 +238,19 @@ def command_line_parser():
         help='JSON configuration file for cbmc-viewer.'
     )
 
+    depricated = parser.add_argument_group(
+        'Depricated',
+        'Options from the original viewer now depricated.'
+    )
+    depricated.add_argument(
+        '--block',
+        dest='coverage',
+        metavar='FILE',
+        help="""
+        Replaced by "--coverage".
+        File containing xml "--cover locations" block coverage data
+        """
+    )
     return parser
 
 def choose_file_type(file_def, file_txt, file_json, file_xml):
@@ -264,30 +277,30 @@ def arguments():
     args.srcdir = os.path.abspath(args.srcdir) if args.srcdir else None
     args.blddir = os.path.abspath(args.blddir) if args.blddir else None
 
-    (args.cbmc_result_txt,
-     args.cbmc_result_json,
-     args.cbmc_result_xml) = choose_file_type(args.cbmc_result,
-                                              args.cbmc_result_txt,
-                                              args.cbmc_result_json,
-                                              args.cbmc_result_xml)
-    (args.cbmc_coverage_txt,
-     args.cbmc_coverage_json,
-     args.cbmc_coverage_xml) = choose_file_type(args.cbmc_coverage,
-                                                args.cbmc_coverage_txt,
-                                                args.cbmc_coverage_json,
-                                                args.cbmc_coverage_xml)
-    (args.cbmc_property_txt,
-     args.cbmc_property_json,
-     args.cbmc_property_xml) = choose_file_type(args.cbmc_property,
-                                                args.cbmc_property_txt,
-                                                args.cbmc_property_json,
-                                                args.cbmc_property_xml)
-    (args.cbmc_loop_txt,
-     args.cbmc_loop_json,
-     args.cbmc_loop_xml) = choose_file_type(args.cbmc_loop,
-                                            args.cbmc_loop_txt,
-                                            args.cbmc_loop_json,
-                                            args.cbmc_loop_xml)
+    (args.result_txt,
+     args.result_json,
+     args.result_xml) = choose_file_type(args.result,
+                                         args.result_txt,
+                                         args.result_json,
+                                         args.result_xml)
+    (args.coverage_txt,
+     args.coverage_json,
+     args.coverage_xml) = choose_file_type(args.coverage,
+                                           args.coverage_txt,
+                                           args.coverage_json,
+                                           args.coverage_xml)
+    (args.property_txt,
+     args.property_json,
+     args.property_xml) = choose_file_type(args.property,
+                                           args.property_txt,
+                                           args.property_json,
+                                           args.property_xml)
+    (args.loop_txt,
+     args.loop_json,
+     args.loop_xml) = choose_file_type(args.loop,
+                                       args.loop_txt,
+                                       args.loop_json,
+                                       args.loop_xml)
 
     if args.verbose:
         logging.basicConfig(level=logging.INFO)
@@ -306,63 +319,63 @@ def main():
     args = arguments()
 
     coverage = coveraget.Coverage(
-        coverage=args.coverage,
-        txtfile=args.cbmc_coverage_txt,
-        xmlfile=args.cbmc_coverage_xml,
-        jsonfile=args.cbmc_coverage_json,
+        coverage=args.viewer_coverage,
+        txtfile=args.coverage_txt,
+        xmlfile=args.coverage_xml,
+        jsonfile=args.coverage_json,
         root=args.srcdir
     )
-    dump(coverage, 'cbmc-coverage.json')
+    dump(coverage, 'viewer-coverage.json')
     loops = loopt.Loop(
-        loops=args.loops,
-        txtfile=args.cbmc_loop_txt,
-        xmlfile=args.cbmc_loop_xml,
-        jsonfile=args.cbmc_loop_json,
+        loops=args.viewer_loops,
+        txtfile=args.loop_txt,
+        xmlfile=args.loop_xml,
+        jsonfile=args.loop_json,
         goto=args.goto,
         root=args.srcdir
     )
-    dump(loops, 'cbmc-loops.json')
+    dump(loops, 'viewer-loops.json')
     properties = propertyt.Property(
-        properties=args.properties,
-        txtfile=args.cbmc_property_txt,
-        xmlfile=args.cbmc_property_xml,
-        jsonfile=args.cbmc_property_json,
+        properties=args.viewer_properties,
+        txtfile=args.property_txt,
+        xmlfile=args.property_xml,
+        jsonfile=args.property_json,
         root=args.srcdir
     )
-    dump(properties, 'cbmc-properties.json')
+    dump(properties, 'viewer-properties.json')
     results = resultt.Result(
-        results=args.results,
-        txtfile=args.cbmc_result_txt,
-        xmlfile=args.cbmc_result_xml,
-        jsonfile=args.cbmc_result_json,
+        results=args.viewer_results,
+        txtfile=args.result_txt,
+        xmlfile=args.result_xml,
+        jsonfile=args.result_json,
         root=args.srcdir
     )
-    dump(results, 'cbmc-results.json')
+    dump(results, 'viewer-results.json')
     traces = tracet.Trace(
-        traces=args.traces,
-        txtfile=args.cbmc_result_txt,
-        xmlfile=args.cbmc_result_xml,
-        jsonfile=args.cbmc_result_json,
+        traces=args.viewer_traces,
+        txtfile=args.result_txt,
+        xmlfile=args.result_xml,
+        jsonfile=args.result_json,
         root=args.srcdir
     )
-    dump(traces, 'cbmc-traces.json')
+    dump(traces, 'viewer-traces.json')
 
     reachable = reachablet.Reachable(args.goto, args.srcdir)
-    dump(reachable, 'cbmc-reachable.json')
+    dump(reachable, 'viewer-reachable.json')
 
     # Make sources last, it may delete the goto binary
     sources = sourcet.Source(
-        sources=args.sources,
+        sources=args.viewer_sources,
         root=args.srcdir,
         build=args.blddir
     )
-    dump(sources, 'cbmc-sources.json')
+    dump(sources, 'viewer-sources.json')
     symbols = symbolt.Symbol(
-        symbols=args.symbols,
+        symbols=args.viewer_symbols,
         root=args.srcdir,
         files=sources.files
     )
-    dump(symbols, 'cbmc-symbols.json')
+    dump(symbols, 'viewer-symbols.json')
 
     os.makedirs(args.htmldir, exist_ok=True)
     script_directory = sys.path[0]
