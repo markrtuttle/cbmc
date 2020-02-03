@@ -66,21 +66,37 @@ function toggleFunction(element) {
   }
 }
 
-function clickFunction(event) {
+function eventToggleFunction(event) {
   toggleFunction(this);
-  if (isFunction(this)) {
-    event.stopPropagation();
-  }
+  event.stopPropagation();
 }
 
 /****************************************************************/
 
-function showClass(event) {
-  window.alert(this.getElementsByClassName("function-call").length);
-  event.stopPropagation()
+function hideSiblings(element) {
+  for (elt of element.parentElement.children) {
+    if (elt != element) {
+      hideFunction(elt);
+    }
+  }
 }
 
-for (elt of document.getElementsByClassName("function")) {
-  elt.addEventListener("click", clickFunction);
+
+function eventHideSiblings(element) {
+  event.preventDefault();
+  hideSiblings(this);
 }
+
+/****************************************************************/
+
+for (elt of document.getElementsByClassName("function")) {
+  elt.addEventListener("click", eventToggleFunction);
+  elt.addEventListener("contextmenu", eventHideSiblings);
+}
+
+for (elt of document.getElementsByClassName("step")) {
+  elt.addEventListener("contextmenu", eventHideSiblings);
+}
+
+/****************************************************************/
 
