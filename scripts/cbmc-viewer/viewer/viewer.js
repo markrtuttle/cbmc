@@ -71,6 +71,14 @@ function eventToggleFunction(event) {
   event.stopPropagation();
 }
 
+for (elt of document.getElementsByClassName("function")) {
+  elt.addEventListener("click", eventToggleFunction);
+}
+
+for (elt of document.getElementsByClassName("step")) {
+  elt.addEventListener("contextmenu", eventHideSiblings);
+}
+
 /****************************************************************/
 
 function hideSiblings(element) {
@@ -81,20 +89,12 @@ function hideSiblings(element) {
   }
 }
 
-
 function eventHideSiblings(element) {
   event.preventDefault();
   hideSiblings(this);
 }
 
-/****************************************************************/
-
 for (elt of document.getElementsByClassName("function")) {
-  elt.addEventListener("click", eventToggleFunction);
-  elt.addEventListener("contextmenu", eventHideSiblings);
-}
-
-for (elt of document.getElementsByClassName("step")) {
   elt.addEventListener("contextmenu", eventHideSiblings);
 }
 
