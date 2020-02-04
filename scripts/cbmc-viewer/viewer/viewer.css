@@ -67,7 +67,7 @@
     padding-left: .5em;
 }
 
-.trace .function-body .hidden
+.trace .function-body.hidden
 {
     display: none;
 }
