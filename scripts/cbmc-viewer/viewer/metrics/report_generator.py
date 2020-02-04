@@ -13,6 +13,18 @@ def chartGenerator():
     root = os.getcwd()
     report = {"Proof":{}, "Model LOC":{}, "Project LOC":{}, "Project Coverage":{}, "Property Issues":{}, "Loop Issues":{}, "Other Issues":{}, "SAT Variables":{}, "SAT Clauses":{}, "SAT Time":{}}
 
+    def empty(report, proof):
+        report['Proof'][proof] = proof
+        report['Model LOC'][proof] = ""
+        report['Project LOC'][proof] = ""
+        report['Project Coverage'][proof] = ""
+        report['Property Issues'][proof] = ""
+        report['Loop Issues'][proof] = ""
+        report['Other Issues'][proof] = ""
+        report['SAT Variables'][proof] = ""
+        report['SAT Clauses'][proof] = ""
+        report['SAT Time'][proof] = ""
+        return report
     for harness in glob(root + '/*'):      # for all harnesses
         if (os.path.isdir(harness)):
             try:
@@ -30,7 +42,13 @@ def chartGenerator():
                 report['SAT Clauses'][os.path.basename(harness)] = viewer_dict[os.path.basename(harness)]['sat-clauses']
                 report['SAT Time'][os.path.basename(harness)] = str(round(float(viewer_dict[os.path.basename(harness)]['sat-time']), 5)) + "s"
             except IOError:
+                proof = os.path.basename(harness)
+                report = empty(report, proof)
                 logging.warning(os.path.basename(harness) + ' does not have a viewer-summary.json file.')
+            except json.decoder.JSONDecodeError:
+                proof = os.path.basename(harness)
+                report = empty(report, proof)
+                logging.warning(os.path.basename(harness) + '/viewer-summary.json is not a parsable json file.')
 
     with open('summary.json', 'r') as f:
         viewer_summary = f.read()
@@ -84,7 +102,8 @@ def summaryGenerator():
                     summary['summary']['unexpected-missing-funcs'] += viewer_dict[os.path.basename(harness)]['unexpected-missing-funcs']
             except IOError:
                 logging.warning(os.path.basename(harness) + ' does not have a viewer-summary.json file.')
-
+            except json.decoder.JSONDecodeError:
+                logging.warning(os.path.basename(harness) + '/viewer-summary.json is not a parsable json file.')
 
     with open('summary.json', 'w', encoding='utf-8') as f:
         json.dump(summary, f, ensure_ascii=False, indent=4)
