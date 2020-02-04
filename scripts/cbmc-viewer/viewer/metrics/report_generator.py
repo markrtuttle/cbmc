@@ -34,7 +34,7 @@ def chartGenerator():
                 report['Proof'][os.path.basename(harness)] = os.path.basename(harness)
                 report['Model LOC'][os.path.basename(harness)] = len(viewer_dict[os.path.basename(harness)]['model-lines'])
                 report['Project LOC'][os.path.basename(harness)] = len(viewer_dict[os.path.basename(harness)]['project-lines'])
-                report['Project Coverage'][os.path.basename(harness)] = str(round(float(len(viewer_dict[os.path.basename(harness)]['project-lines-hit']))/float(len(viewer_dict[os.path.basename(harness)]['project-lines'])), 2)*100)+"%"
+                report['Project Coverage'][os.path.basename(harness)] = round(float(len(viewer_dict[os.path.basename(harness)]['project-lines-hit']))/float(len(viewer_dict[os.path.basename(harness)]['project-lines'])), 2)
                 report['Property Issues'][os.path.basename(harness)] = len(viewer_dict[os.path.basename(harness)]['property-issue-lines'])
                 report['Loop Issues'][os.path.basename(harness)] = len(viewer_dict[os.path.basename(harness)]['loop-issue-lines'])
                 report['Other Issues'][os.path.basename(harness)] = viewer_dict[os.path.basename(harness)]['other-issues-count']
@@ -57,7 +57,7 @@ def chartGenerator():
     report['Proof']['TOTAL'] = "TOTAL"
     report['Model LOC']['TOTAL'] = len(summary['summary']['model-lines'])
     report['Project LOC']['TOTAL'] = len(summary['summary']['project-lines'])
-    report['Project Coverage']['TOTAL'] = str((round(float(len(summary['summary']['project-lines-hit']))/float(len(summary['summary']['project-lines'])), 2))*100)+"%"
+    report['Project Coverage']['TOTAL'] = round(float(len(summary['summary']['project-lines-hit']))/float(len(summary['summary']['project-lines'])), 2)
     report['Property Issues']['TOTAL'] = len(summary['summary']['property-issue-lines'])
     report['Loop Issues']['TOTAL'] = len(summary['summary']['loop-issue-lines'])
     report['Other Issues']['TOTAL'] = summary['summary']['other-issues-count']
