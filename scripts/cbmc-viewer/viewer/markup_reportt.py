@@ -96,6 +96,19 @@ def result_summary(results, properties, symbols):
     return '\n'.join(report)
 
 ################################################################
+# BUG: These are almost certainly loop failures and should be
+# formatted as in the old version of cbmc-viewer
+
+def unknown_failures(results, properties):
+    return [failure
+            for failure in results.results[False]
+            if failure not in properties.properties]
+
+def unknown_failure_summary(results, properties):
+    return ['Property failed: {}'.format(failure)
+            for failure in unknown_failures(results, properties)]
+
+################################################################
 
 def missing_functions_section(functions, config):
     """Report on functions omitted from the test."""
@@ -128,26 +141,34 @@ def missing_functions_section(functions, config):
         section.append("</ul>")
     return '\n'.join(section)
 
-def warning_section(results, config):
+def warning_section(results, properties, config):
     """Report on warnings issued by CBMC."""
 
     warnings = results.warning
     if not warnings:
         return "<p>None</p>"
 
-    prefix = "**** WARNING: no body for function"
+    prefix = "**** WARNING:"
     length = len(prefix)
-    function_warnings = [line for line in warnings if line.startswith(prefix)]
-    other_warnings = [line for line in warnings if not line.startswith(prefix)]
-    functions = [warn[length:].strip() for warn in function_warnings]
+    warnings = [warning[length:].strip() for warning in warnings]
+
+    prefix = "no body for function"
+    length = len(prefix)
+    function_warnings = [warning.strip()
+                         for warning in warnings
+                         if warning.startswith(prefix)]
+    other_warnings = [warning.strip()
+                      for warning in warnings
+                      if not warning.startswith(prefix)]
+
+    functions = [warning[length:] for warning in function_warnings]
+    other_warnings.extend(unknown_failure_summary(results, properties))
 
     section = []
     section.append(missing_functions_section(functions, config))
     if other_warnings:
-        prefix = "**** WARNING: "
-        length = len(prefix)
         section.append("<p>Warnings:</p><ul>")
-        section.extend(["<li>{}</li>".format(warn[length:])
+        section.extend(["<li>{}</li>".format(warn)
                         for warn in sorted(other_warnings)])
         section.append("</ul>")
     return '\n'.join(section)
@@ -163,7 +184,7 @@ def format_report(coverage, symbols, results, properties, config, htmldir='html'
                 coverage_summary=coverage_summary(coverage),
                 coverage_detail=coverage_detail(coverage, symbols),
                 error_report=result_summary(results, properties, symbols),
-                warnings_report=warning_section(results, config)
+                warnings_report=warning_section(results, properties, config)
             )
         )
 
@@ -189,6 +210,7 @@ CBMC report
 {warnings_report}
 </div>
 <div class="errors">
+
 <h2>Errors</h2>
 {error_report}
 </div>
