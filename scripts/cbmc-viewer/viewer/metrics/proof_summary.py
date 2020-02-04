@@ -2,6 +2,7 @@
 
 import json
 import re
+import sys
 
 ################################################################
 
@@ -88,7 +89,6 @@ def missing_functions(viewer_results):
 
 def cbmc_program_steps(viewer_results):
     warnings = viewer_results['status']
-    print(warnings)
     for line in warnings:
         match = re.match('size of program expression: ([0-9]+) steps',
                          line)
@@ -151,28 +151,29 @@ def sat_time(viewer_results):
 ################################################################
 
 def proof_summary():
-    with open('viewer-results.json') as data:
-        viewer_results = json.load(data)
-    with open('viewer-coverage.json') as data:
-        viewer_coverage = json.load(data)
-    with open('viewer-properties.json') as data:
-        viewer_properties = json.load(data)
-    with open('viewer-loops.json') as data:
-        viewer_loops = json.load(data)
-    with open('cbmc-viewer.json') as data:
-        cbmc_viewer = json.load(data)
-        expected_missing = cbmc_viewer.get('expected-missing-functions', [])
-        proof_root = cbmc_viewer.get('proof-root')
-        proof_name = cbmc_viewer.get('proof-name', 'PROOF')
+    try:
+        with open('viewer-results.json') as data:
+            viewer_results = json.load(data)
+        with open('viewer-coverage.json') as data:
+            viewer_coverage = json.load(data)
+        with open('viewer-properties.json') as data:
+            viewer_properties = json.load(data)
+        with open('viewer-loops.json') as data:
+            viewer_loops = json.load(data)
+        with open('cbmc-viewer.json') as data:
+            cbmc_viewer = json.load(data)
+            expected_missing = cbmc_viewer.get('expected-missing-functions', [])
+            proof_root = cbmc_viewer.get('proof-root')
+            proof_name = cbmc_viewer.get('proof-name', 'PROOF')
+    except FileNotFoundError as error:
+        print('Skipping proof summary: {}: {}'.format(error.strerror, error.filename))
+        sys.exit(1)
 
     failures = viewer_results['result']['false']
     properties = viewer_properties['properties']
     loops = {clean_loop_name(name): data
              for name, data in viewer_loops['loops'].items()}
     missing_funcs = missing_functions(viewer_results)
-
-    print(cbmc_program_steps(viewer_results))
-
 
     return {
         proof_name: {
