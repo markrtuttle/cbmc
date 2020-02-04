@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import json
+import re
 
 ################################################################
 
@@ -85,6 +86,70 @@ def missing_functions(viewer_results):
 
 ################################################################
 
+def cbmc_program_steps(viewer_results):
+    warnings = viewer_results['status']
+    print(warnings)
+    for line in warnings:
+        match = re.match('size of program expression: ([0-9]+) steps',
+                         line)
+        if match:
+            return int(match.group(1))
+    return None
+
+def cbmc_vccs(viewer_results):
+    warnings = viewer_results['status']
+    for line in warnings:
+        match = re.match(r'Generated ([0-9]+) VCC\(s\), '
+                         r'([0-9]+) remaining after simplification',
+                         line)
+        if match:
+            return int(match.group(2))
+    return None
+
+def sat_variables(viewer_results):
+    warnings = viewer_results['status']
+    for line in warnings:
+        match = re.match(r'([0-9]+) variables, ([0-9]+) clauses',
+                         line)
+        if match:
+            return int(match.group(1))
+    return 0
+
+def sat_clauses(viewer_results):
+    warnings = viewer_results['status']
+    for line in warnings:
+        match = re.match(r'([0-9]+) variables, ([0-9]+) clauses',
+                         line)
+        if match:
+            return int(match.group(2))
+    return 0
+
+def sat_times(viewer_results):
+    warnings = viewer_results['status']
+    times = []
+    for line in warnings:
+        match = re.match(r'Runtime decision procedure: ([0-9.]+)s',
+                         line)
+        if match:
+            times.append(match.group(1))
+            continue
+        match = re.match(r'Runtime decision procedure: ([0-9.]+)',
+                         line)
+        if match:
+            raise UserWarning(
+                'Found time not seconds: {}'.format(match.group(1))
+            )
+    return times
+
+def sat_time(viewer_results):
+    times = sat_times(viewer_results)
+    time = 0.0
+    for seconds in times:
+        time += float(seconds)
+    return time
+
+################################################################
+
 def proof_summary():
     with open('viewer-results.json') as data:
         viewer_results = json.load(data)
@@ -106,6 +171,9 @@ def proof_summary():
              for name, data in viewer_loops['loops'].items()}
     missing_funcs = missing_functions(viewer_results)
 
+    print(cbmc_program_steps(viewer_results))
+
+
     return {
         proof_name: {
             'model-lines':
@@ -125,7 +193,12 @@ def proof_summary():
                         if func in expected_missing]),
             'unexpected-missing-funcs':
                 sorted([func for func in missing_funcs
-                        if func not in expected_missing])
+                        if func not in expected_missing]),
+            'cbmc-program-steps': cbmc_program_steps(viewer_results),
+            'cbmc-vccs': cbmc_vccs(viewer_results),
+            'sat-variables': sat_variables(viewer_results),
+            'sat-clauses': sat_clauses(viewer_results),
+            'sat-time': sat_time(viewer_results)
         }
     }
 
