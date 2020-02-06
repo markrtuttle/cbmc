@@ -161,7 +161,7 @@ def warning_section(results, properties, config):
                       for warning in warnings
                       if not warning.startswith(prefix)]
 
-    functions = [warning[length:] for warning in function_warnings]
+    functions = [warning[length:].strip() for warning in function_warnings]
     other_warnings.extend(unknown_failure_summary(results, properties))
 
     section = []
