@@ -43,34 +43,53 @@ def coverage_summary(coverage):
 
 ################################################################
 
-def assemble_results(results, properties):
-    tree = {}
+def assemble_results(results, properties, loops):
+    def tree_insert(tree, path, func, line, result, desc):
+        tree[path] = tree.get(path, {})
+        tree[path][func] = tree[path].get(func, {})
+        tree[path][func][line] = tree[path][func].get(line) or set()
+        tree[path][func][line].add((result, desc))
+        return tree
+
+    prop_failure = {}
+    loop_failure = {}
+    unknown_failure = []
+
     for result in results.results[False]:
-        try:
-            prop = properties.properties[result]
-        except KeyError:
-            print("Can't find property {}".format(result))
+        prop = properties.properties.get(result)
+        if not prop:
+
+            # the result is a loop unwinding failure
+            loop = result.replace('.unwind.', '.')
+            if loop in loops.names():
+                path, func, line = loops.lookup(loop)
+                loop_failure = tree_insert(loop_failure,
+                                           path, func, line,
+                                           result, result)
+                continue
+
+            # the result is an unknown property failure
+            unknown_failure.append(result)
             continue
+
+        # the result is an ordinary property failure
         desc = prop['description']
         srcloc = prop['location']
         path = srcloc['file']
         func = srcloc['function']
         line = srcloc['line']
+        prop_failure = tree_insert(prop_failure, path, func, line, result, desc)
 
-        tree[path] = tree.get(path, {})
-        tree[path][func] = tree[path].get(func, {})
-        tree[path][func][line] = tree[path][func].get(line) or set()
-        tree[path][func][line].add((result, desc))
+    return prop_failure, loop_failure, unknown_failure
 
-    return tree
-
-def result_summary(results, properties, symbols):
-    if not results.results[False]:
-        return "<p>None</p>"
+def failure_summary(failures, symbols):
+    if not failures:
+        return None
 
     report = []
     report.append('<ul>')
-    for path, path_results in assemble_results(results, properties).items():
+
+    for path, path_results in failures.items():
         report.append('<li class="file">File {}'
                       '<ul>'
                       .format(markupt.link_text_to_file(path, path)))
@@ -95,18 +114,61 @@ def result_summary(results, properties, symbols):
 
     return '\n'.join(report)
 
-################################################################
-# BUG: These are almost certainly loop failures and should be
-# formatted as in the old version of cbmc-viewer
+def compact_failure_summary(failures, link_loop=False):
+    if not failures:
+        return None
 
-def unknown_failures(results, properties):
-    return [failure
-            for failure in results.results[False]
-            if failure not in properties.properties]
+    report = []
+    report.append('<ul>')
 
-def unknown_failure_summary(results, properties):
-    return ['Property failed: {}'.format(failure)
-            for failure in unknown_failures(results, properties)]
+    for path, path_results in failures.items():
+        for _, func_results in path_results.items():
+            for line, line_results in func_results.items():
+                for name, desc in sorted(line_results):
+
+                    if link_loop and not path.startswith('<'):
+                        desc = '<a href="{}.html#{}">{}</a>'.format(
+                            path, line, desc
+                        )
+
+                    item = []
+                    item.append('<li> [<a href="traces/{}.html">trace</a>] {}'
+                                .format(name, desc))
+                    item.append('in line {}'.format(
+                        markupt.link_text_to_line(line, path, line)
+                    ))
+                    item.append('in file {}'.format(
+                        markupt.link_text_to_file(path, path)
+                    ))
+                    report.append(' '.join(item))
+
+    report.append('</ul>')
+    return '\n'.join(report)
+
+def result_summary(results, properties, loops, symbols):
+    (prop, loop, unknown) = assemble_results(results, properties, loops)
+    loop_summary = compact_failure_summary(loop, True)
+    unknown_summary = compact_failure_summary(unknown)
+    prop_summary = failure_summary(prop, symbols)
+
+    if not loop_summary and not unknown_summary and not prop_summary:
+        return '<p>None</p>'
+
+    report = []
+    if loop_summary:
+        report.append('<ul><li>Loop unwinding failures</li>')
+        report.append(loop_summary)
+        report.append('</ul>')
+
+    if unknown_summary:
+        report.append('<ul><li>Unknown failures</li>')
+        report.append(unknown_summary)
+        report.append('</ul>')
+
+    if prop_summary:
+        report.append(prop_summary)
+
+    return '\n'.join(report)
 
 ################################################################
 
@@ -141,7 +203,7 @@ def missing_functions_section(functions, config):
         section.append("</ul>")
     return '\n'.join(section)
 
-def warning_section(results, properties, config):
+def warning_section(results, config):
     """Report on warnings issued by CBMC."""
 
     warnings = results.warning
@@ -162,7 +224,6 @@ def warning_section(results, properties, config):
                       if not warning.startswith(prefix)]
 
     functions = [warning[length:].strip() for warning in function_warnings]
-    other_warnings.extend(unknown_failure_summary(results, properties))
 
     section = []
     section.append(missing_functions_section(functions, config))
@@ -175,7 +236,7 @@ def warning_section(results, properties, config):
 
 ################################################################
 
-def format_report(coverage, symbols, results, properties, config, htmldir='html'):
+def format_report(coverage, symbols, results, properties, loops, config, htmldir='html'):
     with open(os.path.join(htmldir, 'index.html'), 'w') as html:
         html.write(
             HTML.format(
@@ -183,8 +244,8 @@ def format_report(coverage, symbols, results, properties, config, htmldir='html'
                 root=".",
                 coverage_summary=coverage_summary(coverage),
                 coverage_detail=coverage_detail(coverage, symbols),
-                error_report=result_summary(results, properties, symbols),
-                warnings_report=warning_section(results, properties, config)
+                error_report=result_summary(results, properties, loops, symbols),
+                warnings_report=warning_section(results, config)
             )
         )
 
