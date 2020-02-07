@@ -34,7 +34,7 @@ class Coverage:
         # function_summary: path -> func -> (percentage, hit, total)
         self.function_summary = {}
         # summary: (percentage, hit, total)
-        self.summary = (0, 0, 0)
+        self.summary = {}
 
         if coverage:
             with open(coverage) as load:
