@@ -12,6 +12,9 @@ def functions_by_decreasing_coverage(coverage):
 def coverage_detail(coverage, symbols):
     """Detailed coverage report."""
 
+    if not coverage.function_summary:
+        return ""
+
     report = []
     report.append('<table class="coverage">')
     report.append('<tr>'
@@ -35,6 +38,9 @@ def coverage_detail(coverage, symbols):
 
 def coverage_summary(coverage):
     """Summary coverage report."""
+
+    if not coverage.summary:
+        return "<p>No coverage data</p>"
 
     return ('<p>Coverage: {:.2f} (reached {} of {} reachable lines)</p>'
             .format(coverage.summary['percentage'],
