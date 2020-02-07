@@ -214,12 +214,19 @@ def parse_xml_results(xmlfile):
             results[WARNING].append(line.find('text').text)
             continue
 
-    for line in xml.iter('result'):
-        name, desc, status = line.get('property'), None, line.get('status')
-        if status == 'SUCCESS':
-            results[RESULT][True][name] = desc
-        else:
-            results[RESULT][False][name] = desc
+    if xml.find('result'):
+        # cbmc produced all results as usual
+        for line in xml.iter('result'):
+            name, desc, status = line.get('property'), None, line.get('status')
+            if status == 'SUCCESS':
+                results[RESULT][True][name] = desc
+            else:
+                results[RESULT][False][name] = desc
+    elif xml.find('goto_trace'):
+        # cbmc produced only a one one after being run with --stop-on-fail
+        failure = xml.find('goto_trace').find('failure')
+        name, desc = failure.get('property'), failure.get('reason')
+        results[RESULT][False][name] = desc
 
     line = xml.find('cprover-status')
     if line is not None: # Why does "if line:" not work?

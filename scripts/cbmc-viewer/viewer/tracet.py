@@ -283,12 +283,25 @@ def parse_xml_traces(xmlfile, root=None, wkdir=None):
     _ = wkdir # ignore
 
     traces = {}
-    for line in xml.iter('result'):
-        name, status = line.get('property'), line.get('status')
-        if status == 'SUCCESS':
-            continue
-        traces[name] = parse_xml_trace(line.find('goto_trace'), root)
 
+    # cbmc produced all traces as usual
+    if xml.find('result'):
+        for line in xml.iter('result'):
+            name, status = line.get('property'), line.get('status')
+            if status == 'SUCCESS':
+                continue
+            traces[name] = parse_xml_trace(line.find('goto_trace'), root)
+        return traces
+
+    # cbmc produced only a one trace after being run with --stop-on-fail
+    goto_trace = xml.find('goto_trace')
+    if goto_trace:
+        failure = goto_trace.find('failure')
+        name = failure.get('property') if failure else 'Unknown property'
+        traces[name] = parse_xml_trace(goto_trace, root)
+        return traces
+
+    # cbmc produced no traces
     return traces
 
 def parse_xml_trace(steps, root=None):
