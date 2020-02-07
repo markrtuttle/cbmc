@@ -45,9 +45,27 @@ class Loop:
             print("No loop information found")
             logging.info("No loop information found")
 
+        # Loops in static functions FUNC may have names FUNC$link1.0
+        # Replace the name FUNC$link1.0 with FUNC.0
+        static_loops = [loop for loop in self.loops if '$link' in loop]
+        for loop_name in static_loops:
+            loop_data = self.loops[loop_name]
+            loop_func, loop_index = loop_name.split('.')
+            name = '{}.{}'.format(loop_func[:loop_func.find('$')],
+                                  loop_index)
+            del self.loops[loop_name]
+            self.loops[name] = loop_data
+
+    def names(self):
+        return self.loops.keys()
+
+    def lookup(self, name):
+        return (self.loops.get(name, {}).get('file'),
+                self.loops.get(name, {}).get('function'),
+                self.loops.get(name, {}).get('line'))
+
     def dump(self):
         return json.dumps({'loops': self.loops}, indent=2)
-
 
 def parse_json_data(data, root):
     loop_list = []
