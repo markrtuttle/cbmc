@@ -385,8 +385,8 @@ def main():
                 os.path.join(args.htmldir, 'viewer.js'))
 
     config = viewerconfig.Config(args.config)
-    markup_reportt.format_report(coverage, symbols, results, properties, config,
-                                 htmldir=args.htmldir)
+    markup_reportt.format_report(coverage, symbols, results, properties, loops,
+                                 config, htmldir=args.htmldir)
 
     markup_source = markup_sourcet.MarkupSource(sources, symbols, coverage,
                                                 htmldir=args.htmldir)
