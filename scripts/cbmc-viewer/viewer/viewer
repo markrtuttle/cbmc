@@ -317,7 +317,12 @@ def main():
     """Construct the cbmc report."""
 
     args = arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
+    logging.info("Scanning coverage data...")
     coverage = coveraget.Coverage(
         coverage=args.viewer_coverage,
         txtfile=args.coverage_txt,
@@ -326,6 +331,8 @@ def main():
         root=args.srcdir
     )
     dump(coverage, 'viewer-coverage.json')
+
+    logging.info("Scanning loop definitions...")
     loops = loopt.Loop(
         loops=args.viewer_loops,
         txtfile=args.loop_txt,
@@ -335,6 +342,8 @@ def main():
         root=args.srcdir
     )
     dump(loops, 'viewer-loops.json')
+
+    logging.info("Scanning property definitions...")
     properties = propertyt.Property(
         properties=args.viewer_properties,
         txtfile=args.property_txt,
@@ -343,6 +352,8 @@ def main():
         root=args.srcdir
     )
     dump(properties, 'viewer-properties.json')
+
+    logging.info("Scanning property checking results...")
     results = resultt.Result(
         results=args.viewer_results,
         txtfile=args.result_txt,
@@ -351,6 +362,8 @@ def main():
         root=args.srcdir
     )
     dump(results, 'viewer-results.json')
+
+    logging.info("Scanning error traces...")
     traces = tracet.Trace(
         traces=args.viewer_traces,
         txtfile=args.result_txt,
@@ -360,9 +373,11 @@ def main():
     )
     dump(traces, 'viewer-traces.json')
 
+    logging.info("Computing reachable functions...")
     reachable = reachablet.Reachable(args.goto, args.srcdir)
     dump(reachable, 'viewer-reachable.json')
 
+    logging.info("Scanning source tree...")
     # Make sources last, it may delete the goto binary
     sources = sourcet.Source(
         sources=args.viewer_sources,
@@ -370,6 +385,8 @@ def main():
         build=args.blddir
     )
     dump(sources, 'viewer-sources.json')
+
+    logging.info("Preparing symbol table...")
     symbols = symbolt.Symbol(
         symbols=args.viewer_symbols,
         root=args.srcdir,
@@ -377,6 +394,7 @@ def main():
     )
     dump(symbols, 'viewer-symbols.json')
 
+    logging.info("Preparing report summary...")
     os.makedirs(args.htmldir, exist_ok=True)
     script_directory = sys.path[0]
     shutil.copy(os.path.join(script_directory, 'viewer.css'),
@@ -388,13 +406,18 @@ def main():
     markup_reportt.format_report(coverage, symbols, results, properties, loops,
                                  config, htmldir=args.htmldir)
 
+    logging.info("Annotating source tree...")
     markup_source = markup_sourcet.MarkupSource(sources, symbols, coverage,
                                                 htmldir=args.htmldir)
     markup_source.markup_files(sources.root, sources.files)
 
+    logging.info("Annotating traces...")
     markup_trace = markup_tracet.MarkupTrace(sources, symbols, traces,
                                              htmldir=args.htmldir)
     markup_trace.markup_traces()
+
+    logging.info("Done!")
+
 
 if __name__ == '__main__':
     main()
