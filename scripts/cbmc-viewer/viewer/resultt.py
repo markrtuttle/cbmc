@@ -150,7 +150,7 @@ def parse_text_results(textfile):
 
 def parse_json_results(jsonfile):
     data = parse.parse_json_file(jsonfile)
-a    if data is None:
+    if data is None:
         return {}
 
     results = {
