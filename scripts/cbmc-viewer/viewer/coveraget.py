@@ -40,9 +40,9 @@ class Coverage:
             with open(coverage) as load:
                 self.coverage = fix_line_numbers(json.load(load)['coverage'])
         elif jsonfile:
-            self.coverage, _ = parse_json_coverage(jsonfile, root)
+            self.coverage = parse_json_coverage(jsonfile, root)
         elif xmlfile:
-            self.coverage, _ = parse_xml_coverage(xmlfile, root)
+            self.coverage = parse_xml_coverage(xmlfile, root)
         else:
             print("No coverage data found")
             logging.info("No coverage data found")
@@ -131,63 +131,64 @@ def update_coverage(coverage, path, func, line, status):
             coverage[path][func][line] = 'both'
     return coverage
 
-def parse_description(desc):
-    def parse_lines(string):
-        lines = []
-        for line_range in string.split(','):
-            bounds = line_range.split('-')
-            if len(bounds) == 1:
-                lines.append(int(bounds[0]))
-            else:
-                lines.extend(range(int(bounds[0]), int(bounds[1])))
-        return sorted(lines)
+def parse_lines(string):
+    lines = []
+    for line_range in string.split(','):
+        bounds = line_range.split('-')
+        if len(bounds) == 1:
+            lines.append(int(bounds[0]))
+        else:
+            lines.extend(range(int(bounds[0]), int(bounds[1])))
+    return sorted(lines)
 
-    match = re.match(r'block [0-9]+ \(lines (.*)\)', desc)
+def parse_block(string):
+    filename, function, lines = string.split(':')
+    return [(filename, function, line) for line in parse_lines(lines)]
+
+def parse_description(string):
+    match = re.match(r'block [0-9]+ \(lines (.*)\)', string)
     if not match:
-        logging.debug("Found unparsable coverage description: %s", desc)
+        logging.debug("Found unparsable coverage description: %s", string)
         return None, None, None
 
-    # assert one coverage block: covering a single file, no inlining
-    assert not ';' in match.group(1)
-    block = match.group(1)
-
-    filename, function, lines = block.split(':')
-    return filename, function, parse_lines(lines)
+    return [loc
+            for block in match.group(1).split(';')
+            for loc in parse_block(block)]
 
 def parse_status(status):
     return 'hit' if status.upper() == 'SATISFIED' else 'missed'
 
-def parse_goal(coverage, fullpaths, description, status, srcloc):
+def apply_name_preferences(locations, srcloc):
+
+    # The srcloc path will be relative to the root and the coverage
+    # description block path will be either absolute or relative to
+    # the working directory.  We prefer source paths relative to the
+    # root.
+
+    # The functions names in the srcloc and coverage description block
+    # can be different in several ways
+    #   function$link1 vs function for inlined functions
+    #   __atomic_compare_exchange vs Atomic_CompareAndSwapfor intrinsics
+    # We prefer the cleaner description names.
+
+    src_path, src_func, src_line = srcloc
+    return [(src_path or desc_path,
+             desc_func or src_func,
+             desc_line or src_line)
+            for desc_path, desc_func, desc_line in locations]
+
+def parse_goal(coverage, description, status, srcloc):
     if not description:
         logging.debug("Found goal with no description")
-        return coverage, fullpaths
+        return coverage
 
     hit = parse_status(status)
-    loc_path, loc_func, loc_line = srcloc
-    desc_path, desc_func, desc_lines = parse_description(description)
-    desc_path, desc_func, desc_lines = (desc_path or loc_path,
-                                        desc_func or loc_func,
-                                        desc_lines or [loc_line])
+    locations = parse_description(description)
+    locations = apply_name_preferences(locations, srcloc)
 
-    # We expect (loc_path, loc_func) == (desc_path, desc_func) but loc_path
-    # will be relative to root and desc_path will be either absolute or
-    # relative to a working directory.  We want to use the loc_path
-    # relative to root.
-    # assert desc_func == loc_func
-
-    # This expectation can be violated in several ways:
-    # function versus function$link1 for inlined functions
-    # Atomic_CompareAndSwap_u32 __atomic_compare_exchange_vU32 for intrinsics
-    # So we will prefer the description name over the source location name
-    if desc_func != loc_func:
-        print("Using function name {} in place of {}".format(desc_func, loc_func))
-        loc_func = desc_func
-
-    fullpaths[desc_path] = loc_path
-
-    for line in desc_lines:
-        coverage = update_coverage(coverage, loc_path, loc_func, line, hit)
-    return coverage, fullpaths
+    for path, func, line in locations:
+        coverage = update_coverage(coverage, path, func, line, hit)
+    return coverage
 
 ################################################################
 
@@ -197,7 +198,6 @@ def parse_xml_coverage(xmlfile, root=None):
         return {}, {}
 
     coverage = {}
-    fullpaths = {}
     for goal in xml.iter("goal"):
         description = goal.get("description")
         if description is None:
@@ -205,9 +205,8 @@ def parse_xml_coverage(xmlfile, root=None):
         status = goal.get("status")
         loc = goal.find("location")
         srcloc = locationt.parse_xml_srcloc(loc, root=root)
-        coverage, fullpaths = parse_goal(coverage, fullpaths,
-                                         description, status, srcloc)
-    return coverage, fullpaths
+        coverage = parse_goal(coverage, description, status, srcloc)
+    return coverage
 
 def parse_json_coverage(jsonfile, root=None):
     data = parse.parse_json_file(jsonfile)
@@ -221,15 +220,13 @@ def parse_json_coverage(jsonfile, root=None):
             break
 
     coverage = {}
-    fullpaths = {}
     for goal in goals:
         description = goal["description"]
         status = goal["status"]
         loc = goal["sourceLocation"]
         srcloc = locationt.parse_json_srcloc(loc, root=root)
-        coverage, fullpaths = parse_goal(coverage, fullpaths,
-                                         description, status, srcloc)
-    return coverage, fullpaths
+        coverage = parse_goal(coverage, description, status, srcloc)
+    return coverage
 
 ################################################################
 
