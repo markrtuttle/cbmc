@@ -150,7 +150,7 @@ def parse_text_results(textfile):
 
 def parse_json_results(jsonfile):
     data = parse.parse_json_file(jsonfile)
-    if data is None:
+a    if data is None:
         return {}
 
     results = {
@@ -214,7 +214,9 @@ def parse_xml_results(xmlfile):
             results[WARNING].append(line.find('text').text)
             continue
 
-    if xml.find('result'):
+    # This explicit comparison with None should be redundant, but 'xml.find'
+    # is returning an object and 'if xml.find' is returning false.
+    if xml.find('result') is not None:
         # cbmc produced all results as usual
         for line in xml.iter('result'):
             name, desc, status = line.get('property'), None, line.get('status')
@@ -222,7 +224,7 @@ def parse_xml_results(xmlfile):
                 results[RESULT][True][name] = desc
             else:
                 results[RESULT][False][name] = desc
-    elif xml.find('goto_trace'):
+    elif xml.find('goto_trace') is not None:
         # cbmc produced only a one one after being run with --stop-on-fail
         failure = xml.find('goto_trace').find('failure')
         name, desc = failure.get('property'), failure.get('reason')
