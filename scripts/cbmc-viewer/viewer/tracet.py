@@ -285,7 +285,7 @@ def parse_xml_traces(xmlfile, root=None, wkdir=None):
     traces = {}
 
     # cbmc produced all traces as usual
-    if xml.find('result'):
+    if xml.find('result') is not None:
         for line in xml.iter('result'):
             name, status = line.get('property'), line.get('status')
             if status == 'SUCCESS':
@@ -295,7 +295,7 @@ def parse_xml_traces(xmlfile, root=None, wkdir=None):
 
     # cbmc produced only a one trace after being run with --stop-on-fail
     goto_trace = xml.find('goto_trace')
-    if goto_trace:
+    if goto_trace is not None:
         failure = goto_trace.find('failure')
         name = failure.get('property') if failure else 'Unknown property'
         traces[name] = parse_xml_trace(goto_trace, root)
