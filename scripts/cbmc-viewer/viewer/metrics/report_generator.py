@@ -23,6 +23,8 @@ def chartGenerator():
         report[proof]['Property Issues'] = ""
         report[proof]['Loop Issues'] = ""
         report[proof]['Other Issues'] = ""
+        report[proof]['Expected Missing Functions'] = ""
+        report[proof]['Unexpected Missing Functions'] = ""
         report[proof]['SAT Variables'] = ""
         report[proof]['SAT Clauses'] = ""
         report[proof]['SAT Time'] = ""
@@ -47,6 +49,8 @@ def chartGenerator():
                 report[proof]['Property Issues'] = len(viewer_dict[proof]['property-issue-lines'])
                 report[proof]['Loop Issues'] = len(viewer_dict[proof]['loop-issue-lines'])
                 report[proof]['Other Issues'] = viewer_dict[proof]['other-issues-count']
+                report[proof]['Expected Missing Functions'] = len(viewer_dict[proof]['expected-missing-funcs'])
+                report[proof]['Unexpected Missing Functions'] = len(viewer_dict[proof]['unexpected-missing-funcs'])
                 report[proof]['SAT Variables'] = viewer_dict[proof]['sat-variables']
                 report[proof]['SAT Clauses'] = viewer_dict[proof]['sat-clauses']
                 report[proof]['SAT Time'] = str(round(float(viewer_dict[proof]['sat-time']), 5))
@@ -71,6 +75,8 @@ def chartGenerator():
     report['TOTAL']['Property Issues'] = len(summary['summary']['property-issue-lines'])
     report['TOTAL']['Loop Issues'] = len(summary['summary']['loop-issue-lines'])
     report['TOTAL']['Other Issues'] = summary['summary']['other-issues-count']
+    report['TOTAL']['Expected Missing Functions'] = len(summary['summary']['expected-missing-funcs'])
+    report['TOTAL']['Unexpected Missing Functions'] = len(summary['summary']['unexpected-missing-funcs'])
     report['TOTAL']['SAT Variables'] = "--"
     report['TOTAL']['SAT Clauses'] = "--"
     report['TOTAL']['SAT Time'] = "--"
@@ -87,6 +93,8 @@ def chartGenerator():
         'Property Issues',
         'Loop Issues',
         'Other Issues',
+        'Expected Missing Functions',
+        'Unexpected Missing Functions',
         'SAT Variables',
         'SAT Clauses',
         'SAT Time'
