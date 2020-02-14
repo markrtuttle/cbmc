@@ -193,9 +193,10 @@ def parse_goal(coverage, description, status, srcloc):
 ################################################################
 
 def parse_xml_coverage(xmlfile, root=None):
+    print(xmlfile)
     xml = parse.parse_xml_file(xmlfile)
     if xml is None:
-        return {}, {}
+        return {}
 
     coverage = {}
     for goal in xml.iter("goal"):
@@ -211,7 +212,7 @@ def parse_xml_coverage(xmlfile, root=None):
 def parse_json_coverage(jsonfile, root=None):
     data = parse.parse_json_file(jsonfile)
     if data is None:
-        return {}, {}
+        return {}
 
     goals = []
     for entry in data:
