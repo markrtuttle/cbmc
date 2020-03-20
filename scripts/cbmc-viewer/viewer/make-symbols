@@ -5,6 +5,7 @@
 #pylint: disable=missing-docstring
 
 import argparse
+import logging
 
 import symbolt
 import sourcet
@@ -52,6 +53,16 @@ def parse_arguments():
         Reload symbol data from this file.
         """
     )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output.'
+    )
+    parser.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug output.'
+    )
 
     args = parser.parse_args()
     return args
@@ -60,6 +71,10 @@ def parse_arguments():
 
 def main():
     args = parse_arguments()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
 
     if args.symbols:
         symbols = symbolt.Symbol(symbols=args.symbols)
