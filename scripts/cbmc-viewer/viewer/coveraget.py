@@ -193,7 +193,6 @@ def parse_goal(coverage, description, status, srcloc):
 ################################################################
 
 def parse_xml_coverage(xmlfile, root=None):
-    print(xmlfile)
     xml = parse.parse_xml_file(xmlfile)
     if xml is None:
         return {}
