@@ -6,6 +6,7 @@
 
 import json
 import argparse
+import logging
 
 import sourcet
 
@@ -96,12 +97,27 @@ def create_parser():
         into a single file (a summary).
         """
     )
+    arg.add_argument(
+        '--verbose',
+        action='store_true',
+        help='Verbose output.'
+    )
+    arg.add_argument(
+        '--debug',
+        action='store_true',
+        help='Debug output.'
+    )
     return arg
 
 def main():
     """Gather names of source files used to buid a goto binary."""
 
     args = create_parser().parse_args()
+    if args.verbose:
+        logging.basicConfig(level=logging.INFO)
+    if args.debug:
+        logging.basicConfig(level=logging.DEBUG)
+
     if args.merge:
         print(json.dumps(sourcet.merge(args.merge), indent=2))
         exit()
