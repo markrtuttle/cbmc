@@ -127,8 +127,8 @@ jobs:
       PKGDIR: cbmc
     steps:
 
-#      - name: Checkout the repository
-#        uses: actions/checkout@v2
+      - name: Checkout the repository
+        uses: actions/checkout@v2
 
 #      - name: Update the submodules
 #        run: git submodule update --init
