@@ -24,11 +24,12 @@ SRC?=cbmc-$(VERSION)
 
 default: build
 
-# Begin source tree download unless cwd is the cloned repository.
-ifneq (.,$(SRC))
+################################################################
+# Source tree download
+#
+# Skip this step if SRC indicates the cwd is the repo itself.
 
-cbmc_$(VERSION).orig-java-models-library.tar.gz:
-	curl -L -o $@ https://github.com/diffblue/java-models-library/archive/master.tar.gz
+ifneq (.,$(SRC))
 
 cbmc_$(VERSION).orig.tar.gz:
 ifeq (,$(LATEST))
@@ -45,12 +46,26 @@ else
 	mv diffblue-cbmc-* $@
 endif
 
-$(SRC)/java-models-library: $(SRC) cbmc_$(VERSION).orig-java-models-library.tar.gz
-	cd $< && tar xzf ../cbmc_$(VERSION).orig-java-models-library.tar.gz
+endif
+
+# Source tree download (end)
+################################################################
+
+################################################################
+# Java model library download
+#
+# This library is actually in the cloned repo in jbmc/lib, but the
+# Debian patches expect to find it at top level.
+
+/tmp/cbmc_$(VERSION).orig-java-models-library.tar.gz:
+	curl -L -o $@ https://github.com/diffblue/java-models-library/archive/master.tar.gz
+
+$(SRC)/java-models-library: $(SRC) /tmp/cbmc_$(VERSION).orig-java-models-library.tar.gz
+	cd $< && tar xzf /tmp/cbmc_$(VERSION).orig-java-models-library.tar.gz
 	mv $</java-models-library-master $</java-models-library
 
-endif
-# End source tree download
+# Java model library download (end)
+################################################################
 
 $(SRC)/debian: $(SRC)
 	# should get existing artifacts instead
@@ -81,12 +96,7 @@ $(SRC)/debian/changelog: $(SRC)/debian
 	cat $(SRC)/debian/changelog.orig >> $@
 	$(RM) $(SRC)/debian/changelog.orig
 
-# Require java model library download unless cwd is the cloned repository
-ifneq (.,$(SRC))
-build: $(SRC)/java-models-library
-endif
-
-build: $(SRC)/debian/compat $(SRC)/debian/changelog
+build: $(SRC)/debian/compat $(SRC)/debian/changelog $(SRC)/java-models-library
 	sudo apt-get -y install quilt
 	cd $(SRC) && export QUILT_PATCHES=debian/patches && \
 		while quilt push; do quilt refresh; done && quilt pop -a
