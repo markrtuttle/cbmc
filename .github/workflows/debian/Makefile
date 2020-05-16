@@ -38,7 +38,8 @@ cbmc-$(VERSION)/java-models-library: cbmc-$(VERSION) cbmc_$(VERSION).orig-java-m
 
 cbmc-$(VERSION)/debian: cbmc-$(VERSION)
 	# should get existing artifacts instead
-	curl -o debian.tar.xz http://deb.debian.org/debian/pool/main/c/cbmc/cbmc_$(DEBIAN_BASE).debian.tar.xz
+	#curl -o debian.tar.xz http://deb.debian.org/debian/pool/main/c/cbmc/cbmc_$(DEBIAN_BASE).debian.tar.xz
+	curl -L -o debian.tar.xz https://launchpad.net/~mt-debian/+archive/ubuntu/cbmc-backports/+sourcefiles/cbmc/5.12-5~xenial10/cbmc_5.12-5~xenial10.debian.tar.xz
 	cd $< && tar xJf ../debian.tar.xz
 	$(RM) debian.tar.xz
 
@@ -66,6 +67,7 @@ build: cbmc-$(VERSION)/debian/changelog cbmc-$(VERSION)/java-models-library
 	sudo apt-get -y install \
 		debhelper minisat zlib1g-dev flex bison default-jdk-headless \
 		maven maven-repo-helper maven-debian-helper libmaven-compiler-plugin-java
+	sudo apt-get -y install clang-3.8 libc++-dev libc++abi-dev
 ifneq (,$(LATEST))
 	sed -i "s/^Package: cbmc.*/Package: cbmc$(LATEST)/" cbmc-$(VERSION)/debian/control
 	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#" cbmc-$(VERSION)/debian/dirs
@@ -95,6 +97,14 @@ endif
 	sed -i 's/$$(MAKE)/$$(MAKE) -j$$(parallel)/' cbmc-$(VERSION)/debian/rules
 	cd cbmc-$(VERSION) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
+
+#	# Ubuntu 16 builds replace gcc with clang to avoid gcc unicode bug
+#	OS_NAME=`grep ^NAME= /etc/os-release | sed 's/NAME="\(.*\)"/\1/'` ; \
+#	OS_VERSION=`grep ^VERSION_ID= /etc/os-release | sed 's/VERSION_ID="\([0-9]*\).*"/\1/'` ; \
+#	if [ "$${OS_NAME}" = "Ubuntu" -a "$${OS_VERSION}" = "16" ] ; then \
+#		sudo apt-get -y install clang libc++-dev ; \
+#		sed -i 's|$$(MAKE)|$$(MAKE) "CXX=clang++-3.8 -stdlib=libc++ -I/usr/include/libcxxabi"|' cbmc-$(VERSION)/debian/rules ; \
+#	fi
 
 clean:
 	$(RM) -r cbmc-$(VERSION)
