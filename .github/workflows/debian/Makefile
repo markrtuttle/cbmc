@@ -120,7 +120,7 @@ patch-debian-changelog: $(SRCDIR)/debian
 		NEW_VERSION=$(VERSION)-`expr $$MINOR + 1`~auto1 ; \
 	fi && \
 	cp debian/changelog debian/changelog.orig && \
-	cp CHANGELOG debian/changelog && \
+	cp changelog debian/changelog && \
 	sed -i "s/#VERSION#/$$NEW_VERSION/" debian/changelog && \
 	sed -i "s/#DATE#/`date -R`/" debian/changelog && \
 	cat debian/changelog.orig >> debian/changelog && \
