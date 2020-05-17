@@ -100,11 +100,11 @@ UBUNTU_CODENAME=`grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
 # Download the debian directory.
 $(SRCDIR)/debian: $(SRCDIR)
 	if [ "$(UBUNTU_CODENAME)" = "xenial" ] ; then \
-	  @ echo Downloading $(XENIAL_TARBALL); \
+	  echo Downloading $(XENIAL_TARBALL); \
 	  curl -L -o debian.tar.xz $(XENIAL_TARBALL); \
 	  sudo apt-get -y install clang-3.8 libc++-dev libc++abi-dev; \
 	else \
-	  @ echo Downloading $(DEBIAN_TARBALL); \
+	  echo Downloading $(DEBIAN_TARBALL); \
 	  curl -L -o debian.tar.xz $(DEBIAN_TARBALL); \
 	fi
 	cd $< && tar xJf ../debian.tar.xz
@@ -120,7 +120,7 @@ patch-debian-changelog: $(SRCDIR)/debian
 		NEW_VERSION=$(VERSION)-`expr $$MINOR + 1`~auto1 ; \
 	fi && \
 	cp debian/changelog debian/changelog.orig && \
-	cp changelog debian/changelog && \
+	cp ../changelog debian/changelog && \
 	sed -i "s/#VERSION#/$$NEW_VERSION/" debian/changelog && \
 	sed -i "s/#DATE#/`date -R`/" debian/changelog && \
 	cat debian/changelog.orig >> debian/changelog && \
@@ -204,4 +204,5 @@ github:
 	mkdir -p $(WKDIR)
 	cp -r $(REPO) $(WKDIR)/$(SRCDIR)
 	cp Makefile $(WKDIR)
+	cp changelog $(WKDIR)
 	cd $(WKDIR) && make GITHUB=1
