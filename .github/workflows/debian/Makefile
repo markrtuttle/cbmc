@@ -116,14 +116,14 @@ patch-debian-changelog: $(SRCDIR)/debian
 	if dpkg --compare-versions `dpkg-parsechangelog -S Version` lt $(VERSION) ; then \
 		NEW_VERSION=$(VERSION)-1~auto1 ; \
 	else \
-	  MINOR=`dpkg-parsechangelog -S Version | cut -f2 -d- | cut -f1 -d.` ; \
+	  MINOR=`dpkg-parsechangelog -S Version | cut -f2 -d- | cut -f1 -d. | cut -f1 -d~` ; \
 		NEW_VERSION=$(VERSION)-`expr $$MINOR + 1`~auto1 ; \
-	fi ; \
-	cp debian/changelog debian/changelog.orig ; \
-	cp CHANGELOG debian/changelog ; \
-	sed -i "s/#VERSION#/$$NEW_VERSION/" debian/changelog ; \
-	sed -i "s/#DATE#/`date -R`/" debian/changelog ; \
-	cat debian/changelog.orig >> debian/changelog ; \
+	fi && \
+	cp debian/changelog debian/changelog.orig && \
+	cp CHANGELOG debian/changelog && \
+	sed -i "s/#VERSION#/$$NEW_VERSION/" debian/changelog && \
+	sed -i "s/#DATE#/`date -R`/" debian/changelog && \
+	cat debian/changelog.orig >> debian/changelog && \
 	$(RM) debian/changelog.orig
 
 # Patch the debian control files.
@@ -198,9 +198,10 @@ clean:
 # Copy GitHub repository to /tmp and build the package in /tmp
 # Quilt won't patch special files, so using lndir in place of copy won't work.
 WKDIR=/tmp/debian
+REPO=`pwd`/../../..
 github:
 	$(RM) -r $(WKDIR)
 	mkdir -p $(WKDIR)
-	cp -r `pwd` $(WKDIR)/$(SRCDIR)
-	cp .github/workflows/debian/Makefile $(WKDIR)
+	cp -r $(REPO) $(WKDIR)/$(SRCDIR)
+	cp Makefile $(WKDIR)
 	cd $(WKDIR) && make GITHUB=1
