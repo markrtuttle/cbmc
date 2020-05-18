@@ -64,45 +64,83 @@ jobs:
           echo CBMC_VERSION = ${{ steps.version.outputs.cbmc_version }}
           echo PKG_VERSION = ${{ steps.version.outputs.pkg_version }}
 
-#  Ubuntu16Stable:
-#    name: Ubuntu 16 stable package
-#    runs-on: ubuntu-16.04
-#    needs: Tags
-#    env:
-#      OS: catalina
-#      VERSION: ${{needs.Tags.outputs.pkg_version}}
-#      TIME: ${{needs.Tags.outputs.time}}
-#      SHA: ${{needs.Tags.outputs.sha}}
-#
-#      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~catalina.tar.gz
-#      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~catalina.tar.gz
-#
-#      ARTIFACT_STABLE_NAME: MacOS cbmc ${{needs.Tags.outputs.pkg_version}} catalina ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
-#      ARTIFACT_LATEST_NAME: MacOS cbmc-latest ${{needs.Tags.outputs.pkg_version}} catalina ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
-#
-#      SCRIPT_DIR: .github/workflows/macos15
-#
-#      VERSION: ${{ needs.Tags.outputs.version }}
-#      ARTIFACT_NAME: Ubuntu16 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
-#      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}-ubuntu16_amd64.deb
-#      PKGDIR: cbmc
-#      SCRIPT_DIR: .github/workflows/ubuntu16
-#    steps:
-#
-#      - name: Checkout the repository
-#        uses: actions/checkout@v2
-#
-#      - name: Update the submodules
-#        run: git submodule update --init
-#
-#      - name: Create the package
-#        run: make -f ${SCRIPT_DIR}/Makefile SCRIPT_DIR=${SCRIPT_DIR} PACKAGE_NAME=${PACKAGE_NAME}
-#
-#      - name: Upload the Debian package
-#        uses: actions/upload-artifact@v1
-#        with:
-#          name: ${{ env.ARTIFACT_NAME }}
-#          path: ${{ env.PACKAGE_NAME }}
+  Ubuntu16_Stable:
+    name: Ubuntu 16 stable package
+    runs-on: ubuntu-16.04
+    needs: Tags
+    env:
+      OS: xenial
+      VERSION: ${{needs.Tags.outputs.pkg_version}}
+      TIME: ${{needs.Tags.outputs.time}}
+      SHA: ${{needs.Tags.outputs.sha}}
+
+      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~xenial.tar.gz
+      ARTIFACT_STABLE_NAME: Ubuntu16 cbmc ${{needs.Tags.outputs.pkg_version}} xenial ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
+
+      SCRIPT_DIR: .github/workflows/debian
+    steps:
+
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Update the submodules
+        run: git submodule update --init
+
+      - name: Create the package
+        run: |
+          df /tmp
+          ls /tmp
+          rm -rf /tmp/*
+          cp -r . /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
+          cd /tmp && make GITHUB=1 STABLE=1 CBMC_VERSION=${VERSION}
+          ls /tmp
+          mv /tmp/*.deb ${PACKAGE_STABLE_NAME}
+
+      - name: Upload the Debian package
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.ARTIFACT_STABLE_NAME }}
+          path: ${{ env.PACKAGE_STABLE_NAME }}
+
+  Ubuntu16_Latest:
+    name: Ubuntu 16 latest package
+    runs-on: ubuntu-16.04
+    needs: Tags
+    env:
+      OS: xenial
+      VERSION: ${{needs.Tags.outputs.pkg_version}}
+      TIME: ${{needs.Tags.outputs.time}}
+      SHA: ${{needs.Tags.outputs.sha}}
+
+      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~xenial.tar.gz
+      ARTIFACT_LATEST_NAME: Ubuntu16 cbmc-latest ${{needs.Tags.outputs.pkg_version}} xenial ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
+
+      SCRIPT_DIR: .github/workflows/debian
+    steps:
+
+      - name: Checkout the repository
+        uses: actions/checkout@v2
+
+      - name: Update the submodules
+        run: git submodule update --init
+
+      - name: Create the package
+        run: |
+          df /tmp
+          ls /tmp
+          rm -rf /tmp/*
+          cp -r . /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
+          cd /tmp && make GITHUB=1 STABLE= CBMC_VERSION=${VERSION}
+          ls /tmp
+          mv /tmp/*.deb ${PACKAGE_LATEST_NAME}
+
+      - name: Upload the Debian package
+        uses: actions/upload-artifact@v1
+        with:
+          name: ${{ env.ARTIFACT_LATEST_NAME }}
+          path: ${{ env.PACKAGE_LATEST_NAME }}
 
 #  Ubuntu16:
 #    name: Ubuntu 16 package
