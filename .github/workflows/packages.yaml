@@ -70,7 +70,8 @@ jobs:
     needs: Tags
     env:
       OS: xenial
-      VERSION: ${{needs.Tags.outputs.pkg_version}}
+      PKG_VERSION: ${{needs.Tags.outputs.pkg_version}}
+      CBMC_VERSION: ${{needs.Tags.outputs.cbmc_version}}
       TIME: ${{needs.Tags.outputs.time}}
       SHA: ${{needs.Tags.outputs.sha}}
 
@@ -92,7 +93,7 @@ jobs:
           ls /tmp
           cp -r . /tmp
           cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
-          cd /tmp && make GITHUB=1 STABLE=1 CBMC_VERSION=${VERSION}
+          cd /tmp && make GITHUB=1 STABLE=1 CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
           ls /tmp
           mv /tmp/*.deb ${PACKAGE_STABLE_NAME}
 
@@ -108,7 +109,8 @@ jobs:
     needs: Tags
     env:
       OS: xenial
-      VERSION: ${{needs.Tags.outputs.pkg_version}}
+      PKG_VERSION: ${{needs.Tags.outputs.pkg_version}}
+      CBMC_VERSION: ${{needs.Tags.outputs.cbmc_version}}
       TIME: ${{needs.Tags.outputs.time}}
       SHA: ${{needs.Tags.outputs.sha}}
 
@@ -130,7 +132,7 @@ jobs:
           ls /tmp
           cp -r . /tmp
           cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
-          cd /tmp && make GITHUB=1 STABLE= CBMC_VERSION=${VERSION}
+          cd /tmp && make GITHUB=1 STABLE= CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
           ls /tmp
           mv /tmp/*.deb ${PACKAGE_LATEST_NAME}
 
@@ -196,7 +198,7 @@ jobs:
 #          path: ${{ env.PACKAGE_NAME }}
 
   MacOS:
-    name: MacOS package
+    name: MacOS packages
     runs-on: macos-10.15
     needs: Tags
     env:
@@ -239,7 +241,7 @@ jobs:
           path: ${{env.PACKAGE_LATEST_NAME}}
 
   VS2019:
-    name: Windows VS2019 installer
+    name: Windows VS2019 installers
     runs-on: windows-2019
     needs: Tags
     env:
