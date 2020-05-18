@@ -84,7 +84,6 @@ jobs:
           echo SHA = ${{ steps.sha.outputs.sha }}
           echo RUN ID = ${{ steps.runid.outputs.runid }}
           echo RUN NUMBER = ${{ steps.runnum.outputs.runnum }}
-          echo NAME = ${{ steps.closedtag.outputs.name }}
           echo CBMC_VERSION = ${{ steps.version.outputs.cbmc_version }}
           echo PKG_VERSION = ${{ steps.version.outputs.pkg_version }}
 #          echo OPEN TAG = ${{ steps.opentag.outputs.opentag }}
