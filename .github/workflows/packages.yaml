@@ -55,29 +55,6 @@ jobs:
           echo "::set-output name=cbmc_version::${CBMC_VERSION}"
           echo "::set-output name=pkg_version::${PKG_VERSION}"
 
-#      - id: opentag
-#        #
-#        # This is the string used to name the package artifact
-#        # uploaded to GitHub.  The javascript on the web page scanning
-#        # the list of stored package artifacts assumes the artifact
-#        # name has the form
-#        #   OS VERSION TIMESTAMP SHA RUNID
-#        # and parses these names to identify the stable and latest
-#        # packages for a given operating system, and to identify the
-#        # workflow run that generated them.
-#        #
-#        run: echo "::set-output name=opentag::${{ steps.version.outputs.version }} ${{ steps.time.outputs.time }} ${{ steps.sha.outputs.sha }} ${{ steps.runid.outputs.runid }}"
-
-#      - id: closedtag
-#        #
-#        # This is the string used to name the package itself that is
-#        # included in the package artifact uploaded to GitHub.  It is
-#        # probably enough to include just the version and sha, but
-#        # including the timestamp makes them sort into a reasonable
-#        # order in directory listings.
-#        #
-#        run: echo "::set-output name=closedtag::${{ steps.version.outputs.version }}"
-
       - name: echo
         run: |
           echo TIME = ${{ steps.time.outputs.time }}
@@ -86,8 +63,46 @@ jobs:
           echo RUN NUMBER = ${{ steps.runnum.outputs.runnum }}
           echo CBMC_VERSION = ${{ steps.version.outputs.cbmc_version }}
           echo PKG_VERSION = ${{ steps.version.outputs.pkg_version }}
-#          echo OPEN TAG = ${{ steps.opentag.outputs.opentag }}
-#          echo CLOSED TAG = ${{ steps.closedtag.outputs.closedtag }}
+
+#  Ubuntu16Stable:
+#    name: Ubuntu 16 stable package
+#    runs-on: ubuntu-16.04
+#    needs: Tags
+#    env:
+#      OS: catalina
+#      VERSION: ${{needs.Tags.outputs.pkg_version}}
+#      TIME: ${{needs.Tags.outputs.time}}
+#      SHA: ${{needs.Tags.outputs.sha}}
+#
+#      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~catalina.tar.gz
+#      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~catalina.tar.gz
+#
+#      ARTIFACT_STABLE_NAME: MacOS cbmc ${{needs.Tags.outputs.pkg_version}} catalina ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
+#      ARTIFACT_LATEST_NAME: MacOS cbmc-latest ${{needs.Tags.outputs.pkg_version}} catalina ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
+#
+#      SCRIPT_DIR: .github/workflows/macos15
+#
+#      VERSION: ${{ needs.Tags.outputs.version }}
+#      ARTIFACT_NAME: Ubuntu16 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
+#      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}-ubuntu16_amd64.deb
+#      PKGDIR: cbmc
+#      SCRIPT_DIR: .github/workflows/ubuntu16
+#    steps:
+#
+#      - name: Checkout the repository
+#        uses: actions/checkout@v2
+#
+#      - name: Update the submodules
+#        run: git submodule update --init
+#
+#      - name: Create the package
+#        run: make -f ${SCRIPT_DIR}/Makefile SCRIPT_DIR=${SCRIPT_DIR} PACKAGE_NAME=${PACKAGE_NAME}
+#
+#      - name: Upload the Debian package
+#        uses: actions/upload-artifact@v1
+#        with:
+#          name: ${{ env.ARTIFACT_NAME }}
+#          path: ${{ env.PACKAGE_NAME }}
 
 #  Ubuntu16:
 #    name: Ubuntu 16 package
@@ -115,6 +130,7 @@ jobs:
 #        with:
 #          name: ${{ env.ARTIFACT_NAME }}
 #          path: ${{ env.PACKAGE_NAME }}
+
 
 #  Ubuntu18:
 #    name: Ubuntu 18 package
@@ -225,12 +241,12 @@ jobs:
         run: ${{env.SCRIPT_DIR}}\build-cbmc.bat
 
       - name: Build the stable installer
-        run: $|
+        run: |
            ${{env.SCRIPT_DIR}}\build-installer.bat cbmc
            move cbmc.msi ${{env.PACKAGE_STABLE_NAME}}
 
       - name: Build the latest installer
-        run: $|
+        run: |
            ${{env.SCRIPT_DIR}}\build-installer.bat cbmc-latest
            move cbmc-latest.msi ${{env.PACKAGE_LATEST_NAME}}
 

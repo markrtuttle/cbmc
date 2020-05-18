@@ -245,6 +245,7 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	$(MAKE) patch-debian-files
 	$(MAKE) patch-debian-patches
 	$(MAKE) patch-debian-concurrency
+	export DEB_BUILD_OPTIONS=nocheck && \
 	cd $(SRCDIR) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
 
