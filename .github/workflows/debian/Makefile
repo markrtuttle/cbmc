@@ -142,12 +142,11 @@ endif
 
 DEBIAN_TARBALL=http://deb.debian.org/debian/pool/main/c/cbmc/cbmc_$(DEBIAN_BASE).debian.tar.xz
 XENIAL_TARBALL=https://launchpad.net/~mt-debian/+archive/ubuntu/cbmc-backports/+sourcefiles/cbmc/5.12-5~xenial10/cbmc_5.12-5~xenial10.debian.tar.xz
-UBUNTU=`grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
 
 # Download the debian directory.
 $(SRCDIR)/debian: $(SRCDIR)
-	echo Found UBUNTU=$(UBUNTU)
-	if [ "$(UBUNTU)" = "xenial" ] ; then \
+	echo Found PKG_OS=$(PKG_OS)
+	if [ "$(PKG_OS)" = "xenial" ] ; then \
 	  echo Downloading $(XENIAL_TARBALL); \
 	  curl -L -o debian.tar.xz $(XENIAL_TARBALL); \
 	  sudo apt-get -y install clang-3.8 libc++-dev libc++abi-dev; \
@@ -181,7 +180,7 @@ patch-debian-changelog:
 	echo Updated NEW_VERSION=$${NEW_VERSION} && \
 	mv $(SRCDIR)/debian/changelog $(SRCDIR)/debian/changelog.orig && \
 	cp changelog $(SRCDIR)/debian/changelog && \
-	sed -i "s/#VERSION#/$${NEW_VERSION}~$(UBUNTU)10/" $(SRCDIR)/debian/changelog
+	sed -i "s/#VERSION#/$${NEW_VERSION}~$(PKG_OS)10/" $(SRCDIR)/debian/changelog
 	sed -i "s/#DATE#/`date -R`/" $(SRCDIR)/debian/changelog
 	cat $(SRCDIR)/debian/changelog.orig >> $(SRCDIR)/debian/changelog
 	$(RM) $(SRCDIR)/debian/changelog.orig
