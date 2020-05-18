@@ -1,45 +1,86 @@
 ################################################################
 # Configuration
 
-# CBMC stable release version number used to download the stable tarball
-VERSION=5.12
+# CBMC
+#
+# CBMC name: The stable package will be $(CBMC_NAME) and the develop
+# package will be $(CBMC_NAME)-latest.
+#
+# CBMC version: The version number returned by `cbmc --version`.
 
-# Debian package version number of the form 5.12-5~xenial10
-# Typically given on the command line during a GitHub actions build.
-# Leave empty to compute version number during stable tarball build.
-DEBIAN_VERSION=
+CBMC_NAME = cbmc
+CBMC_VERSION = 5.12
 
-# Suffix to use to distinguish a develop/HEAD build from a release
-LATEST=-latest
+# Builds
+#
+# GITHUB: Build using a clone of the GitHub repository if GITHUB is
+# nonempty, and build by downloading tarballs if it is not.  If GITHUB
+# is nonempty, the GitHub repository must be a subdirectory of the
+# directory containing this Makefile, and it must be named
+# $(CBMC_NAME)-$(CBMC_VERSION).
+#
+# STABLE: When GITHUB is not nonempty and we are downloading tarballs,
+# download the tagged commit $(CBMC_NAME)-$(CBMC_VERSION) if STABLE is
+# nonempty and download the tip of the develop branch if it is not.
+# Regardless of whether GITHUB is nonempty or not, install into
+# /usr/bin if STABLE is nonempty and into /usr/local/cbmc-latest/bin if
+# it is not.
 
-# Debian package version to fetch debian/ folder from
-DEBIAN_BASE=5.12-5
-
-# Set GITHUB=1 to indicate that cbmc-$(VERSION) is a copy of the
-# source tree (a recursive clone of the GitHub repository), and there
-# is no need to download tarballs of the source code.
+STABLE=
 GITHUB=
+
+# Packages
+#
+# PKG_NAME: The name of the package, typically cbmc or cbmc-latest
+# PKG_VERSION: The version of the package, typically 5.12-1
+# PKG_OS: The Ubuntu code name, typically xenial or bionic or focal
+#
+# The name defaults to cbmc or cbmc-latest.  The version defaults to a
+# value computed from the most recent package, but is typically given
+# on the command line when building from GitHub.  The os defaults to
+# the value given in /etc/os-release.
+#
+# Package version used in changelog: $(PKG_VERSION)~$(PKG_OS)
+# Package name: $(PKG_NAME)_$(PKG_VERSION)~$(PKG_OS)_amd64.deb
+
+ifneq ($(STABLE),)
+PKG_NAME = $(CBMC_NAME)
+else
+PKG_NAME = $(CBMC_NAME)-latest
+endif
+
+#PKG_VERSION =
+
+PKG_OS = `grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
+
+# Debian packaging
+#
+# DEBIAN_BASE: The Debian version to fetch the debian folder from.
+# This Makefile downloads cbmc_$(DEBIAN_BASE).debian.tar.xz from
+# Debian and uses its contents as the starting point for the debian
+# folder for this package.
+
+DEBIAN_BASE=5.12-5
 
 ################################################################
 
 default: build
 
-SRCDIR=cbmc-$(VERSION)
+SRCDIR=$(CBMC_NAME)-$(CBMC_VERSION)
 
 ################################################################
 # Assemble the source tree in $(SRCDIR)
 #
 
-ifeq (,$(GITHUB))
-# Unless the source tree is checked out from the GitHub repository,
-# assemble the source tree from tarballs.
+ifeq ($(GITHUB),)
+# GITHUB is empty, so assemble the source tree from tarballs
 
 ## Download the source tree
-cbmc_$(VERSION).orig.tar.gz:
-ifeq (,$(LATEST))
+$(CBMC_NAME)_$(CBMC_VERSION).orig.tar.gz:
+ifneq ($(STABLE),)
 	# For the stable release, download the tagged commit
 	curl -o $@ -L \
-	  https://github.com/diffblue/cbmc/archive/cbmc-$(VERSION).tar.gz
+	  https://github.com/diffblue/cbmc/archive/cbmc-$(CBMC_VERSION).tar.gz
 else
 	# For the latest release, download latest commit on the develop branch
 	curl -o $@ -L \
@@ -47,15 +88,15 @@ else
 endif
 
 ## Download the java models library submoduled into the cbmc repository
-cbmc_$(VERSION).orig-java-models-library.tar.gz:
+$(CBMC_NAME)_$(CBMC_VERSION).orig-java-models-library.tar.gz:
 	curl -o $@ -L \
 	  https://github.com/diffblue/java-models-library/archive/master.tar.gz
 
 ## Extract the source tree
-$(SRCDIR): cbmc_$(VERSION).orig.tar.gz
+$(SRCDIR): $(CBMC_NAME)_$(CBMC_VERSION).orig.tar.gz
 	tar xzf $<
-ifeq (,$(LATEST))
-	mv cbmc-cbmc-$(VERSION) $@
+ifneq ($(STABLE),)
+	mv cbmc-cbmc-$(CBMC_VERSION) $@
 else
 	mv diffblue-cbmc-* $@
 endif
@@ -65,20 +106,21 @@ endif
 ## submoduled into the cbmc repository.
 $(SRCDIR)/java-models-library: \
 		$(SRCDIR) \
-		cbmc_$(VERSION).orig-java-models-library.tar.gz
-	cd $< && tar xzf ../cbmc_$(VERSION).orig-java-models-library.tar.gz
+		$(CBMC_NAME)_$(CBMC_VERSION).orig-java-models-library.tar.gz
+	cd $< && tar xzf ../$(CBMC_NAME)_$(CBMC_VERSION).orig-java-models-library.tar.gz
 	mv $</java-models-library-master $</java-models-library
 
 else
-# If the source tree is checked out from the GitHub repository, we
-# need to create the new source tarball for Debian and move the java
-# models library to where the Debian patch files expect to find them.
+# GITHUB is nonempty, so use the GitHub repository in $(SRCDIR).
 
-cbmc_$(VERSION).orig.tar.gz:
+## Create source tarball for Debian from the repository
+$(CBMC_NAME)_$(CBMC_VERSION).orig.tar.gz:
 	tar fcz $@ $(SRCDIR) \
 		--exclude java-models-library  --exclude debian \
 		--exclude-vcs --exclude-vcs-ignores  --exclude .github
 
+## Move the java models library to where the Debian patch files expect
+## to find them.
 $(SRCDIR)/java-models-library:
 	mv $(SRCDIR)/jbmc/lib/java-models-library $@
 
@@ -104,6 +146,7 @@ UBUNTU=`grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
 
 # Download the debian directory.
 $(SRCDIR)/debian: $(SRCDIR)
+	echo Found UBUNTU=$(UBUNTU)
 	if [ "$(UBUNTU)" = "xenial" ] ; then \
 	  echo Downloading $(XENIAL_TARBALL); \
 	  curl -L -o debian.tar.xz $(XENIAL_TARBALL); \
@@ -119,18 +162,23 @@ $(SRCDIR)/debian: $(SRCDIR)
 
 # Update the debian changelog.
 patch-debian-changelog:
-	if [ "$(DEBIAN_VERSION)" != "" ]; then \
-	  NEW_VERSION=$(DEBIAN_VERSION); \
+	echo Found PKG_VERSION=$(PKG_VERSION)
+	if [ "$(PKG_VERSION)" != "" ]; then \
+	  NEW_VERSION=$(PKG_VERSION); \
 	else \
 	  OLD_VERSION=`cd $(SRCDIR) && dpkg-parsechangelog -S Version` && \
-	  if dpkg --compare-versions "$${OLD_VERSION}" lt $(VERSION) ; then \
-	    NEW_VERSION=$(VERSION)-1 ; \
+	  echo Found OLD_VERSION=$${OLD_VERSION} && \
+	  if dpkg --compare-versions "$${OLD_VERSION}" lt $(CBMC_VERSION) ; then \
+	    NEW_VERSION=$(CBMC_VERSION)-1 ; \
 	  else \
 	    MINOR=`echo $${OLD_VERSION} | cut -f2 -d- | cut -f1 -d. | cut -f1 -d~` && \
-	    NEW_VERSION=$(VERSION)-`expr $${MINOR} + 1` ; \
+	    echo Found MINOR=$${MINOR} && \
+	    NEW_VERSION=$(CBMC_VERSION)-`expr $${MINOR} + 1` ; \
 	  fi  \
         fi && \
+	echo Found NEW_VERSION=$${NEW_VERSION} && \
 	NEW_VERSION=`echo $${NEW_VERSION} | cut -f1 -d~` && \
+	echo Updated NEW_VERSION=$${NEW_VERSION} && \
 	mv $(SRCDIR)/debian/changelog $(SRCDIR)/debian/changelog.orig && \
 	cp changelog $(SRCDIR)/debian/changelog && \
 	sed -i "s/#VERSION#/$${NEW_VERSION}~$(UBUNTU)10/" $(SRCDIR)/debian/changelog
@@ -142,12 +190,12 @@ patch-debian-changelog:
 # In particular, install cbmc-latest into /usr/local/cbmc-latest/bin and
 # use locally-installed versions of debhelper and maven plug-in.
 patch-debian-files:
-ifneq (,$(LATEST))
+ifeq ($(STABLE),)
 	# Install cbmc-latest in /usr/local/cbmc-latest/bin (cbmc in /usr/bin)
-	sed -i "s/^Package: cbmc.*/Package: cbmc$(LATEST)/" $(SRCDIR)/debian/control
-	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#g" $(SRCDIR)/debian/dirs
-	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#g" $(SRCDIR)/debian/install
-	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#g" $(SRCDIR)/debian/links
+	sed -i "s/^Package: cbmc.*/Package: $(PKG_NAME)/" $(SRCDIR)/debian/control
+	sed -i "s#usr/bin#usr/local/$(PKG_NAME)/bin#g" $(SRCDIR)/debian/dirs
+	sed -i "s#usr/bin#usr/local/$(PKG_NAME)/bin#g" $(SRCDIR)/debian/install
+	sed -i "s#usr/bin#usr/local/$(PKG_NAME)/bin#g" $(SRCDIR)/debian/links
 	echo "override_dh_usrlocal:" >> $(SRCDIR)/debian/rules
 	echo "\ttrue" >> $(SRCDIR)/debian/rules
 	echo "override_dh_dwz:" >> $(SRCDIR)/debian/rules
@@ -168,6 +216,15 @@ endif
 	sed -i "s/^\(+[[:space:]]*<version>\).*<\/version>/\1$$PLUGIN_VERSION<\/version>/" \
 	  $(SRCDIR)/debian/patches/maven*
 
+# Use quilt to update the patch files.
+# Changes in the source code may cause old patches to apply only with
+# fuzz, and Debian package building does not allow fuzz.
+patch-debian-patches: $(SRCDIR)/debian
+	sudo apt-get -y install quilt
+	cd $(SRCDIR) && export QUILT_PATCHES=debian/patches && \
+		while quilt push; do quilt refresh; done && quilt pop -a
+	$(RM) $(SRCDIR)/debian/patches/*~
+
 # Patch the debian rules to build cbmc concurrently.
 # See also the --parallel option added to dh above for early debhelper versions.
 # This should really become part of the standard Debian build rules.
@@ -180,12 +237,6 @@ patch-debian-concurrency:
 # End Assemble the debian directory
 ################################################################
 
-patch-sources: $(SRCDIR)/debian
-	sudo apt-get -y install quilt
-	cd $(SRCDIR) && export QUILT_PATCHES=debian/patches && \
-		while quilt push; do quilt refresh; done && quilt pop -a
-	$(RM) $(SRCDIR)/debian/patches/*~
-
 build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	sudo apt-get -y install \
 	  debhelper minisat zlib1g-dev flex bison default-jdk-headless \
@@ -193,24 +244,27 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	  libmaven-compiler-plugin-java
 	$(MAKE) patch-debian-changelog
 	$(MAKE) patch-debian-files
+	$(MAKE) patch-debian-patches
 	$(MAKE) patch-debian-concurrency
-	$(MAKE) patch-sources
 	cd $(SRCDIR) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
 
 clean:
 	$(RM) -r $(SRCDIR)
-	$(RM) cbmc_$(VERSION).orig.tar.gz
-	$(RM) cbmc_$(VERSION).orig-java-models-library.tar.gz
+	$(RM) $(CBMC_NAME)_$(CBMC_VERSION).orig.tar.gz
+	$(RM) $(CBMC_NAME)_$(CBMC_VERSION).orig-java-models-library.tar.gz
 
 .PHONY: default build clean
 .PHONY: patch-debian-changelog patch-debian-files patch-debian-concurrency
-.PHONY: patch-sources
+.PHONY: patch-debian-patches
 
+################################################################
 # Copy GitHub repository to /tmp and build the package in /tmp
 # Quilt won't patch special files, so using lndir in place of copy won't work.
-WKDIR=/tmp/debian
-REPO=`pwd`/../../..
+
+WKDIR = /tmp/debian
+REPO = ../../..
+
 github:
 	$(RM) -r $(WKDIR)
 	mkdir -p $(WKDIR)
@@ -225,3 +279,16 @@ tarball:
 	cp Makefile $(WKDIR)
 	cp changelog $(WKDIR)
 	cd $(WKDIR) && make GITHUB= && make -C $(SRCDIR)/src clean
+
+dump-config:
+	@ echo CBMC_NAME = $(CBMC_NAME)
+	@ echo CBMC_VERSION = $(CBMC_VERSION)
+	@ echo STABLE = $(STABLE)
+	@ echo GITHUB = $(GITHUB)
+	@ echo PKG_NAME = $(PKG_NAME)
+	@ echo PKG_VERSION = $(PKG_VERSION)
+	@ echo PKG_OS = $(PKG_OS)
+	@ echo DEBIAN_BASE = $(DEBIAN_BASE)
+	@ echo SRCDIR = $(SRCDIR)
+
+.PHONY: github tarball dump-config
