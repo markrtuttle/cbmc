@@ -1,8 +1,15 @@
-PKGDIR ?= cbmc-latest
-PKGTAR ?= $(PKGDIR).tar.gz
+PKG_STABLE_NAME = cbmc
+PKG_LATEST_NAME = cbmc-latest
+PKG_STABLE_TAR = $(PKG_STABLE_NAME).tar.gz
+LATEST_TAR = $(PKG_LATEST_NAME).tar.gz
+
 REPODIR ?= .
 
-default: $(PKGTAR)
+default: stable latest
+
+stable: $(PKG_STABLE_TAR)
+
+latest: $(PKG_LATEST_TAR)
 
 $(REPODIR)/build/bin/cbmc:
 	brew install cmake ninja openjdk maven
@@ -10,28 +17,53 @@ $(REPODIR)/build/bin/cbmc:
 	cd $(REPODIR) && cmake -S. -Bbuild -DCMAKE_C_COMPILER=/usr/bin/clang -DWITH_JBMC=YES -GNinja
 	cd $(REPODIR) && cmake --build build
 
-$(PKGTAR): $(REPODIR)/build/bin/cbmc
-	mkdir -p ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/cbmc ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-analyzer ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-cc ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-diff ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-gcc ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-harness ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-instrument ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/goto-ld ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/janalyzer ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/java-unit ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/jbmc ${PKGDIR}/bin
-	cp $(REPODIR)/build/bin/jdiff ${PKGDIR}/bin
+$(PKG_STABLE_TAR): $(REPODIR)/build/bin/cbmc
+	$(RM) -r ${PKG_STABLE_NAME}
 
-	mkdir -p ${PKGDIR}/share/man/man1
-	cp $(REPODIR)/doc/man/cbmc.1 ${PKGDIR}/share/man/man1
+	mkdir -p ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/cbmc ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-analyzer ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-cc ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-diff ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-gcc ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-harness ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-instrument ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-ld ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/janalyzer ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/java-unit ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/jbmc ${PKG_STABLE_NAME}/bin
+	cp $(REPODIR)/build/bin/jdiff ${PKG_STABLE_NAME}/bin
 
-	tar fcz ${PKGTAR} ${PKGDIR}
+	mkdir -p ${PKG_STABLE_NAME}/share/man/man1
+	cp $(REPODIR)/doc/man/cbmc.1 ${PKG_STABLE_NAME}/share/man/man1
+
+	tar fcz ${PKG_STABLE_TAR} ${PKG_STABLE_NAME}
+
+$(PKG_LATEST_TAR): $(REPODIR)/build/bin/cbmc
+	$(RM) -r ${PKG_LATEST_NAME}
+
+	mkdir -p ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/cbmc ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-analyzer ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-cc ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-diff ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-gcc ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-harness ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-instrument ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/goto-ld ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/janalyzer ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/java-unit ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/jbmc ${PKG_LATEST_NAME}/bin
+	cp $(REPODIR)/build/bin/jdiff ${PKG_LATEST_NAME}/bin
+
+	mkdir -p ${PKG_LATEST_NAME}/share/man/man1
+	cp $(REPODIR)/doc/man/cbmc.1 ${PKG_LATEST_NAME}/share/man/man1
+
+	tar fcz ${PKG_LATEST_TAR} ${PKG_LATEST_NAME}
 
 clean:
 	$(RM) *~
-	$(RM) -r $(PKGTAR) $(PKGDIR)
+	$(RM) -r $(PKG_STABLE_TAR) $(PKG_STABLE_NAME)
+	$(RM) -r $(PKG_LATEST_TAR) $(PKG_LATEST_NAME)
 
-.PHONY: default clean
+.PHONY: default stable latest clean

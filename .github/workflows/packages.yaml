@@ -19,7 +19,8 @@ jobs:
       runid: ${{ steps.runid.outputs.runid }}
       runnum: ${{ steps.runnum.outputs.runnum }}
       name: ${{ env.PACKAGE_NAME }}
-      version: ${{ steps.version.outputs.version }}
+      cbmc_version: ${{ steps.version.outputs.cbmc_version }}
+      pkg_version: ${{ steps.version.outputs.pkg_version }}
       opentag: ${{ steps.opentag.outputs.opentag }}
       closedtag: ${{ steps.closedtag.outputs.closedtag }}
     steps:
@@ -50,31 +51,32 @@ jobs:
       - id: version
         run: |
           CBMC_VERSION=$(grep CBMC_VERSION src/config.inc | sed 's/.*= *//')
-          VERSION=$(${VERSION_SCRIPT} ${CBMC_VERSION} ${{ github.run_number }})
-          echo "::set-output name=version::${VERSION}"
+          PKG_VERSION= ${CBMC_VERSION}-${{ github.run_number }}
+          echo "::set-output name=cbmc_version::${CBMC_VERSION}"
+          echo "::set-output name=pkg_version::${PKG_VERSION}"
 
-      - id: opentag
-        #
-        # This is the string used to name the package artifact
-        # uploaded to GitHub.  The javascript on the web page scanning
-        # the list of stored package artifacts assumes the artifact
-        # name has the form
-        #   OS VERSION TIMESTAMP SHA RUNID
-        # and parses these names to identify the stable and latest
-        # packages for a given operating system, and to identify the
-        # workflow run that generated them.
-        #
-        run: echo "::set-output name=opentag::${{ steps.version.outputs.version }} ${{ steps.time.outputs.time }} ${{ steps.sha.outputs.sha }} ${{ steps.runid.outputs.runid }}"
+#      - id: opentag
+#        #
+#        # This is the string used to name the package artifact
+#        # uploaded to GitHub.  The javascript on the web page scanning
+#        # the list of stored package artifacts assumes the artifact
+#        # name has the form
+#        #   OS VERSION TIMESTAMP SHA RUNID
+#        # and parses these names to identify the stable and latest
+#        # packages for a given operating system, and to identify the
+#        # workflow run that generated them.
+#        #
+#        run: echo "::set-output name=opentag::${{ steps.version.outputs.version }} ${{ steps.time.outputs.time }} ${{ steps.sha.outputs.sha }} ${{ steps.runid.outputs.runid }}"
 
-      - id: closedtag
-        #
-        # This is the string used to name the package itself that is
-        # included in the package artifact uploaded to GitHub.  It is
-        # probably enough to include just the version and sha, but
-        # including the timestamp makes them sort into a reasonable
-        # order in directory listings.
-        #
-        run: echo "::set-output name=closedtag::${{ steps.version.outputs.version }}"
+#      - id: closedtag
+#        #
+#        # This is the string used to name the package itself that is
+#        # included in the package artifact uploaded to GitHub.  It is
+#        # probably enough to include just the version and sha, but
+#        # including the timestamp makes them sort into a reasonable
+#        # order in directory listings.
+#        #
+#        run: echo "::set-output name=closedtag::${{ steps.version.outputs.version }}"
 
       - name: echo
         run: |
@@ -83,71 +85,78 @@ jobs:
           echo RUN ID = ${{ steps.runid.outputs.runid }}
           echo RUN NUMBER = ${{ steps.runnum.outputs.runnum }}
           echo NAME = ${{ steps.closedtag.outputs.name }}
-          echo VERSION = ${{ steps.version.outputs.version }}
-          echo OPEN TAG = ${{ steps.opentag.outputs.opentag }}
-          echo CLOSED TAG = ${{ steps.closedtag.outputs.closedtag }}
+          echo CBMC_VERSION = ${{ steps.version.outputs.cbmc_version }}
+          echo PKG_VERSION = ${{ steps.version.outputs.pkg_version }}
+#          echo OPEN TAG = ${{ steps.opentag.outputs.opentag }}
+#          echo CLOSED TAG = ${{ steps.closedtag.outputs.closedtag }}
 
-  Ubuntu16:
-    name: Ubuntu 16 package
-    runs-on: ubuntu-16.04
-    needs: Tags
-    env:
-      VERSION: ${{ needs.Tags.outputs.version }}
-      ARTIFACT_NAME: Ubuntu16 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
-      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}-ubuntu16_amd64.deb
-      PKGDIR: cbmc
-      SCRIPT_DIR: .github/workflows/ubuntu16
-    steps:
+#  Ubuntu16:
+#    name: Ubuntu 16 package
+#    runs-on: ubuntu-16.04
+#    needs: Tags
+#    env:
+#      VERSION: ${{ needs.Tags.outputs.version }}
+#      ARTIFACT_NAME: Ubuntu16 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
+#      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}-ubuntu16_amd64.deb
+#      PKGDIR: cbmc
+#      SCRIPT_DIR: .github/workflows/ubuntu16
+#    steps:
+#
+#      - name: Checkout the repository
+#        uses: actions/checkout@v2
+#
+#      - name: Update the submodules
+#        run: git submodule update --init
+#
+#      - name: Create the package
+#        run: make -f ${SCRIPT_DIR}/Makefile SCRIPT_DIR=${SCRIPT_DIR} PACKAGE_NAME=${PACKAGE_NAME}
+#
+#      - name: Upload the Debian package
+#        uses: actions/upload-artifact@v1
+#        with:
+#          name: ${{ env.ARTIFACT_NAME }}
+#          path: ${{ env.PACKAGE_NAME }}
 
-      - name: Checkout the repository
-        uses: actions/checkout@v2
-
-      - name: Update the submodules
-        run: git submodule update --init
-
-      - name: Create the package
-        run: make -f ${SCRIPT_DIR}/Makefile SCRIPT_DIR=${SCRIPT_DIR} PACKAGE_NAME=${PACKAGE_NAME}
-
-      - name: Upload the Debian package
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.PACKAGE_NAME }}
-
-  Ubuntu18:
-    name: Ubuntu 18 package
-    runs-on: ubuntu-18.04
-    needs: Tags
-    env:
-      VERSION: ${{ needs.Tags.outputs.version }}
-      ARTIFACT_NAME: Ubuntu18 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
-      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}-ubuntu18_amd64.deb
-      PKGDIR: cbmc
-      SCRIPT_DIR: .github/workflows/ubuntu18
-    steps:
-
-      - name: Checkout the repository
-        uses: actions/checkout@v2
-
-      - name: Update the submodules
-        run: git submodule update --init
-
-      - name: Create the package
-        run: make -f ${SCRIPT_DIR}/Makefile SCRIPT_DIR=${SCRIPT_DIR} PACKAGE_NAME=${PACKAGE_NAME}
-
-      - name: Upload the Debian package
-        uses: actions/upload-artifact@v1
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.PACKAGE_NAME }}
+#  Ubuntu18:
+#    name: Ubuntu 18 package
+#    runs-on: ubuntu-18.04
+#    needs: Tags
+#    env:
+#      VERSION: ${{ needs.Tags.outputs.version }}
+#      ARTIFACT_NAME: Ubuntu18 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
+#      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}-ubuntu18_amd64.deb
+#      PKGDIR: cbmc
+#      SCRIPT_DIR: .github/workflows/ubuntu18
+#    steps:
+#
+#      - name: Checkout the repository
+#        uses: actions/checkout@v2
+#
+#      - name: Update the submodules
+#        run: git submodule update --init
+#
+#      - name: Create the package
+#        run: make -f ${SCRIPT_DIR}/Makefile SCRIPT_DIR=${SCRIPT_DIR} PACKAGE_NAME=${PACKAGE_NAME}
+#
+#      - name: Upload the Debian package
+#        uses: actions/upload-artifact@v1
+#        with:
+#          name: ${{ env.ARTIFACT_NAME }}
+#          path: ${{ env.PACKAGE_NAME }}
 
   MacOS:
     name: MacOS package
     runs-on: macos-10.15
     needs: Tags
     env:
-      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}_macos1015.tar.gz
-      ARTIFACT_NAME: MacOS ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
+      OS: catalina
+      VERSION: ${{needs.Tags.outputs.pkg_version}}
+      TIME: ${{needs.Tags.outputs.time}}
+      SHA: ${{needs.Tags.outputs.sha}}
+      PACKAGE_STABLE_NAME: cbmc_${{env.VERSION}}~${{env.OS}}.tar.gz
+      PACKAGE_LATEST_NAME: cbmc-latest_${{env.VERSION}}~${{env.OS}}.tar.gz
+      ARTIFACT_STABLE_NAME: MacOS cbmc ${{env.VERSION}} ${{env.OS}} ${{env.TIME}} ${{env.SHA}}
+      ARTIFACT_LATEST_NAME: MacOS cbmc-latest ${{env.VERSION}} ${{env.OS}} ${{env.TIME}} ${{env.SHA}}
       SCRIPT_DIR: .github/workflows/macos15
     steps:
 
@@ -160,48 +169,55 @@ jobs:
       - name: Build the package
         run: |
           make -f ${SCRIPT_DIR}/Makefile
-          mv cbmc-latest.tar.gz ${PACKAGE_NAME}
+          mv cbmc.tar.gz ${PACKAGE_STABLE_NAME}
+          mv cbmc-latest.tar.gz ${PACKAGE_LATEST_NAME}
 
-      - name: Upload the package
+      - name: Upload the stable package
         uses: actions/upload-artifact@v1
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.PACKAGE_NAME }}
+          name: ${{ env.ARTIFACT_STABLE_NAME }}
+          path: ${{ env.PACKAGE_STABLE_NAME }}
 
-  VS2019:
-    name: Windows VS2019 installer
-    runs-on: windows-2019
-    needs: Tags
-    env:
-      ARTIFACT_NAME: Windows VS2019 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
-      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}_vs2019.msi
-      SCRIPT_DIR: .github\workflows\vs2019
-
-    defaults:
-      run:
-         shell: cmd
-    steps:
-
-      - name: Checkout the repository
-        uses: actions/checkout@v2
-
-      - name: Update the submodules
-        run: git submodule update --init
-
-      - name: Install bison and flex
-        run: ${{ env.SCRIPT_DIR }}\install-bison.bat
-
-      - name: Patch cbmc
-        run: ${{ env.SCRIPT_DIR }}\patch-cbmc.bat
-
-      - name: Build cbmc
-        run: ${{ env.SCRIPT_DIR }}\build-cbmc.bat
-
-      - name: Build the installer
-        run: ${{ env.SCRIPT_DIR }}\build-installer.bat ${{ env.PACKAGE_NAME }}
-
-      - name: Upload the installer
+      - name: Upload the latest package
         uses: actions/upload-artifact@v1
         with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.PACKAGE_NAME }}
+          name: ${{ env.ARTIFACT_LATEST_NAME }}
+          path: ${{ env.PACKAGE_LATEST_NAME }}
+
+#  VS2019:
+#    name: Windows VS2019 installer
+#    runs-on: windows-2019
+#    needs: Tags
+#    env:
+#      ARTIFACT_NAME: Windows VS2019 ${{ needs.Tags.outputs.name }} ${{ needs.Tags.outputs.version }}
+#      PACKAGE_NAME: ${{ needs.Tags.outputs.name }}_${{ needs.Tags.outputs.version }}_vs2019.msi
+#      SCRIPT_DIR: .github\workflows\vs2019
+#
+#    defaults:
+#      run:
+#         shell: cmd
+#    steps:
+#
+#      - name: Checkout the repository
+#        uses: actions/checkout@v2
+#
+#      - name: Update the submodules
+#        run: git submodule update --init
+#
+#      - name: Install bison and flex
+#        run: ${{ env.SCRIPT_DIR }}\install-bison.bat
+#
+#      - name: Patch cbmc
+#        run: ${{ env.SCRIPT_DIR }}\patch-cbmc.bat
+#
+#      - name: Build cbmc
+#        run: ${{ env.SCRIPT_DIR }}\build-cbmc.bat
+#
+#      - name: Build the installer
+#        run: ${{ env.SCRIPT_DIR }}\build-installer.bat ${{ env.PACKAGE_NAME }}
+#
+#      - name: Upload the installer
+#        uses: actions/upload-artifact@v1
+#        with:
+#          name: ${{ env.ARTIFACT_NAME }}
+#          path: ${{ env.PACKAGE_NAME }}
