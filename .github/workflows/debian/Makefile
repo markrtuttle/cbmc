@@ -1,8 +1,13 @@
 ################################################################
 # Configuration
 
-# Package version number (cbmc version number)
+# CBMC stable release version number used to download the stable tarball
 VERSION=5.12
+
+# Debian package version number of the form 5.12-5~xenial10
+# Typically given on the command line during a GitHub actions build.
+# Leave empty to compute version number during stable tarball build.
+DEBIAN_VERSION=
 
 # Suffix to use to distinguish a develop/HEAD build from a release
 LATEST=-latest
@@ -95,11 +100,11 @@ endif
 
 DEBIAN_TARBALL=http://deb.debian.org/debian/pool/main/c/cbmc/cbmc_$(DEBIAN_BASE).debian.tar.xz
 XENIAL_TARBALL=https://launchpad.net/~mt-debian/+archive/ubuntu/cbmc-backports/+sourcefiles/cbmc/5.12-5~xenial10/cbmc_5.12-5~xenial10.debian.tar.xz
-UBUNTU_CODENAME=`grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
+UBUNTU=`grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
 
 # Download the debian directory.
 $(SRCDIR)/debian: $(SRCDIR)
-	if [ "$(UBUNTU_CODENAME)" = "xenial" ] ; then \
+	if [ "$(UBUNTU)" = "xenial" ] ; then \
 	  echo Downloading $(XENIAL_TARBALL); \
 	  curl -L -o debian.tar.xz $(XENIAL_TARBALL); \
 	  sudo apt-get -y install clang-3.8 libc++-dev libc++abi-dev; \
@@ -110,32 +115,39 @@ $(SRCDIR)/debian: $(SRCDIR)
 	cd $< && tar xJf ../debian.tar.xz
 	$(RM) debian.tar.xz
 
+
+
 # Update the debian changelog.
-patch-debian-changelog: $(SRCDIR)/debian
-	cd $(SRCDIR) && \
-	if dpkg --compare-versions `dpkg-parsechangelog -S Version` lt $(VERSION) ; then \
-		NEW_VERSION=$(VERSION)-1~auto1 ; \
+patch-debian-changelog:
+	if [ "$(DEBIAN_VERSION)" != "" ]; then \
+	  NEW_VERSION=$(DEBIAN_VERSION); \
 	else \
-	  MINOR=`dpkg-parsechangelog -S Version | cut -f2 -d- | cut -f1 -d. | cut -f1 -d~` ; \
-		NEW_VERSION=$(VERSION)-`expr $$MINOR + 1`~auto1 ; \
-	fi && \
-	cp debian/changelog debian/changelog.orig && \
-	cp ../changelog debian/changelog && \
-	sed -i "s/#VERSION#/$$NEW_VERSION/" debian/changelog && \
-	sed -i "s/#DATE#/`date -R`/" debian/changelog && \
-	cat debian/changelog.orig >> debian/changelog && \
-	$(RM) debian/changelog.orig
+	  OLD_VERSION=`cd $(SRCDIR) && dpkg-parsechangelog -S Version` && \
+	  if dpkg --compare-versions "$${OLD_VERSION}" lt $(VERSION) ; then \
+	    NEW_VERSION=$(VERSION)-1 ; \
+	  else \
+	    MINOR=`echo $${OLD_VERSION} | cut -f2 -d- | cut -f1 -d. | cut -f1 -d~` && \
+	    NEW_VERSION=$(VERSION)-`expr $${MINOR} + 1` ; \
+	  fi  \
+        fi && \
+	NEW_VERSION=`echo $${NEW_VERSION} | cut -f1 -d~` && \
+	mv $(SRCDIR)/debian/changelog $(SRCDIR)/debian/changelog.orig && \
+	cp changelog $(SRCDIR)/debian/changelog && \
+	sed -i "s/#VERSION#/$${NEW_VERSION}~$(UBUNTU)10/" $(SRCDIR)/debian/changelog
+	sed -i "s/#DATE#/`date -R`/" $(SRCDIR)/debian/changelog
+	cat $(SRCDIR)/debian/changelog.orig >> $(SRCDIR)/debian/changelog
+	$(RM) $(SRCDIR)/debian/changelog.orig
 
 # Patch the debian control files.
 # In particular, install cbmc-latest into /usr/local/cbmc-latest/bin and
 # use locally-installed versions of debhelper and maven plug-in.
-patch-debian-files: $(SRCDIR)/debian
+patch-debian-files:
 ifneq (,$(LATEST))
 	# Install cbmc-latest in /usr/local/cbmc-latest/bin (cbmc in /usr/bin)
 	sed -i "s/^Package: cbmc.*/Package: cbmc$(LATEST)/" $(SRCDIR)/debian/control
-	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#" $(SRCDIR)/debian/dirs
-	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#" $(SRCDIR)/debian/install
-	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#" $(SRCDIR)/debian/links
+	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#g" $(SRCDIR)/debian/dirs
+	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#g" $(SRCDIR)/debian/install
+	sed -i "s#usr/bin#usr/local/cbmc$(LATEST)/bin#g" $(SRCDIR)/debian/links
 	echo "override_dh_usrlocal:" >> $(SRCDIR)/debian/rules
 	echo "\ttrue" >> $(SRCDIR)/debian/rules
 	echo "override_dh_dwz:" >> $(SRCDIR)/debian/rules
@@ -159,7 +171,7 @@ endif
 # Patch the debian rules to build cbmc concurrently.
 # See also the --parallel option added to dh above for early debhelper versions.
 # This should really become part of the standard Debian build rules.
-patch-debian-concurrency: $(SRCDIR)/debian
+patch-debian-concurrency:
 	sed -i '11s/^$$/parallel = $$(patsubst parallel=\%,\%,$$(filter parallel=\%,$$(DEB_BUILD_OPTIONS)))/' \
 	  $(SRCDIR)/debian/rules
 	sed -i 's/$$(MAKE)/$$(MAKE) -j$$(parallel)/' $(SRCDIR)/debian/rules
@@ -205,4 +217,11 @@ github:
 	cp -r $(REPO) $(WKDIR)/$(SRCDIR)
 	cp Makefile $(WKDIR)
 	cp changelog $(WKDIR)
-	cd $(WKDIR) && make GITHUB=1
+	cd $(WKDIR) && make GITHUB=1 && make -C $(SRCDIR)/src clean
+
+tarball:
+	$(RM) -r $(WKDIR)
+	mkdir -p $(WKDIR)
+	cp Makefile $(WKDIR)
+	cp changelog $(WKDIR)
+	cd $(WKDIR) && make GITHUB= && make -C $(SRCDIR)/src clean
