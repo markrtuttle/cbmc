@@ -51,7 +51,7 @@ jobs:
       - id: version
         run: |
           CBMC_VERSION=$(grep CBMC_VERSION src/config.inc | sed 's/.*= *//')
-          PKG_VERSION= ${CBMC_VERSION}-${{ github.run_number }}
+          PKG_VERSION=$(echo ${CBMC_VERSION}-${{ github.run_number }})
           echo "::set-output name=cbmc_version::${CBMC_VERSION}"
           echo "::set-output name=pkg_version::${PKG_VERSION}"
 
