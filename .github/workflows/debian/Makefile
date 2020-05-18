@@ -253,7 +253,6 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	$(MAKE) patch-debian-changelog
 	$(MAKE) patch-debian-files
 	$(MAKE) patch-debian-concurrency
-	exit 1
 	export DEB_BUILD_OPTIONS=nocheck && \
 	cd $(SRCDIR) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
