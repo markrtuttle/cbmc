@@ -222,6 +222,7 @@ patch-debian-patches: $(SRCDIR)/debian
 
 	# Patch xenial maven plug-in patch, it deleted <version> without replacing it.
 	if [ "$(PKG_OS)" = "xenial" ] ; then \
+	  sed -i "s/@@ -32,7 +32,6 @@/@@ -32,7 +32,7 @@/" $(SRCDIR)/debian/patches/maven* && \
 	  sed -i "/^-[[:space:]]*<version>.*<\/version>/ a + <version>VERSION<\/version>" \
 	    $(SRCDIR)/debian/patches/maven* ; \
 	fi
@@ -252,6 +253,7 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	$(MAKE) patch-debian-changelog
 	$(MAKE) patch-debian-files
 	$(MAKE) patch-debian-concurrency
+	exit 1
 	export DEB_BUILD_OPTIONS=nocheck && \
 	cd $(SRCDIR) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
