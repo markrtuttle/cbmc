@@ -88,9 +88,8 @@ jobs:
 
       - name: Create the package
         run: |
-          df /tmp
+          df -m /tmp
           ls /tmp
-          rm -rf /tmp/*
           cp -r . /tmp
           cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
           cd /tmp && make GITHUB=1 STABLE=1 CBMC_VERSION=${VERSION}
@@ -127,9 +126,8 @@ jobs:
 
       - name: Create the package
         run: |
-          df /tmp
+          df -m /tmp
           ls /tmp
-          rm -rf /tmp/*
           cp -r . /tmp
           cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
           cd /tmp && make GITHUB=1 STABLE= CBMC_VERSION=${VERSION}
