@@ -210,11 +210,6 @@ endif
 	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
 	  fi ; \
 	fi
-	# Patch xenial maven plug-in patch, it deleted <version> without replacing it.
-	if [ "$(PKG_OS)" = "xenial" ] ; then \
-	  sed -i "/^-[[:space:]]*<version>.*<\/version>/ a + <version>VERSION<\/version>" \
-	    $(SRCDIR)/debian/patches/maven* ; \
-	fi
 	# Patch maven plug-in version
 	PLUGIN_VERSION=`dpkg -l libmaven-compiler-plugin-java | tail -n1 | awk '{print $$3}' | cut -f1 -d-` ; \
 	sed -i "s/^\(+[[:space:]]*<version>\).*<\/version>/\1$$PLUGIN_VERSION<\/version>/" \
@@ -224,6 +219,13 @@ endif
 # Changes in the source code may cause old patches to apply only with
 # fuzz, and Debian package building does not allow fuzz.
 patch-debian-patches: $(SRCDIR)/debian
+
+	# Patch xenial maven plug-in patch, it deleted <version> without replacing it.
+	if [ "$(PKG_OS)" = "xenial" ] ; then \
+	  sed -i "/^-[[:space:]]*<version>.*<\/version>/ a + <version>VERSION<\/version>" \
+	    $(SRCDIR)/debian/patches/maven* ; \
+	fi
+
 	sudo apt-get -y install quilt
 	cd $(SRCDIR) && export QUILT_PATCHES=debian/patches && \
 		while quilt push; do quilt refresh; done && quilt pop -a
