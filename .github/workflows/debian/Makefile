@@ -210,6 +210,11 @@ endif
 	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
 	  fi ; \
 	fi
+	# Patch xenial maven plug-in patch, it deleted <version> without replacing it.
+	if [ "$(PKG_OS)" = "xenial" ] ; then \
+	  sed -i "/^-[[:space:]]*<version>.*<\/version>/ a + <version>VERSION<\/version>" \
+	    $(SRCDIR)/debian/patches/maven* ; \
+	fi
 	# Patch maven plug-in version
 	PLUGIN_VERSION=`dpkg -l libmaven-compiler-plugin-java | tail -n1 | awk '{print $$3}' | cut -f1 -d-` ; \
 	sed -i "s/^\(+[[:space:]]*<version>\).*<\/version>/\1$$PLUGIN_VERSION<\/version>/" \
@@ -241,10 +246,11 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	  debhelper minisat zlib1g-dev flex bison default-jdk-headless \
 	  maven maven-repo-helper maven-debian-helper \
 	  libmaven-compiler-plugin-java
+	$(MAKE) patch-debian-patches
 	$(MAKE) patch-debian-changelog
 	$(MAKE) patch-debian-files
-	$(MAKE) patch-debian-patches
 	$(MAKE) patch-debian-concurrency
+	exit 1
 	export DEB_BUILD_OPTIONS=nocheck && \
 	cd $(SRCDIR) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
