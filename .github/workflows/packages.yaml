@@ -153,10 +153,13 @@ jobs:
       VERSION: ${{needs.Tags.outputs.pkg_version}}
       TIME: ${{needs.Tags.outputs.time}}
       SHA: ${{needs.Tags.outputs.sha}}
-      PACKAGE_STABLE_NAME: cbmc_${{env.VERSION}}~${{env.OS}}.tar.gz
-      PACKAGE_LATEST_NAME: cbmc-latest_${{env.VERSION}}~${{env.OS}}.tar.gz
-      ARTIFACT_STABLE_NAME: MacOS cbmc ${{env.VERSION}} ${{env.OS}} ${{env.TIME}} ${{env.SHA}}
-      ARTIFACT_LATEST_NAME: MacOS cbmc-latest ${{env.VERSION}} ${{env.OS}} ${{env.TIME}} ${{env.SHA}}
+
+      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~catalina.tar.gz
+      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~catalina.tar.gz
+
+      ARTIFACT_STABLE_NAME: MacOS cbmc ${{needs.Tags.outputs.pkg_version}} catalina ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
+      ARTIFACT_LATEST_NAME: MacOS cbmc-latest ${{needs.Tags.outputs.pkg_version}} catalina ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}}
+
       SCRIPT_DIR: .github/workflows/macos15
     steps:
 
