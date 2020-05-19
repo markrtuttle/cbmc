@@ -90,7 +90,7 @@ jobs:
       - name: Create the package
         run: |
           cp -r . /tmp/cbmc-${CBMC_VERSION}
-          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/surefire /tmp
           df -m /tmp
           ls /tmp
           make -C /tmp GITHUB=1 STABLE=1 CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
@@ -130,7 +130,7 @@ jobs:
       - name: Create the package
         run: |
           cp -r . /tmp/cbmc-${CBMC_VERSION}
-          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/surefire /tmp
           df -m /tmp
           ls /tmp
           cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog /tmp
