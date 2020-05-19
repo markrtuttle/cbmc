@@ -207,13 +207,15 @@ ifeq ($(STABLE),)
 	sed -i "/share\/man\/man1/d" $(SRCDIR)/debian/links
 endif
 	# Patch debhelper version
-	DEBHELPER_VERSION=`dpkg -l debhelper | tail -n1 | awk '{print $$3}' | cut -f1 -d.` ; \
+	DEBHELPER_VERSION=`dpkg -l debhelper | tail -n1 | awk '{print $$3}' | cut -f1 -d.` && \
 	if [ $$DEBHELPER_VERSION -lt 12 ] ; then \
-	  echo $$DEBHELPER_VERSION > $(SRCDIR)/debian/compat ; \
+	  echo $$DEBHELPER_VERSION > $(SRCDIR)/debian/compat && \
 	  if [ $$DEBHELPER_VERSION -lt 10 ] ; then \
 	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
-	  fi ; \
-	fi
+	  fi && \
+	fi &&
+	sed -i "s/\(debhelper-compat *\)(= *[0-9]*),/\1 (= $$DEBHELPER_VERSION)/" \
+	  $(SRCDIR)/debian/rules ; \
 
 # Update the debian path files.
 # Changes in the source code may cause old patches to apply only with
@@ -261,7 +263,8 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	sudo apt-get -y install \
 	  debhelper minisat zlib1g-dev flex bison default-jdk-headless \
 	  maven maven-repo-helper maven-debian-helper \
-	  libmaven-compiler-plugin-java
+	  libmaven-compiler-plugin-java \
+	  gdb
 	$(MAKE) patch-debian-patches
 	$(MAKE) patch-debian-changelog
 	$(MAKE) patch-debian-files
