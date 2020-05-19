@@ -182,6 +182,10 @@ patch-debian-changelog:
 	cp changelog $(SRCDIR)/debian/changelog && \
 	sed -i "s/#VERSION#/$${NEW_VERSION}~$(PKG_OS)/" $(SRCDIR)/debian/changelog
 	sed -i "s/#DATE#/`date -R`/" $(SRCDIR)/debian/changelog
+	# Use "unstable" for Debian distribution; use Ubunu code name for Ubuntu
+	if [[ `lsb_release -d` == *Ubuntu* ]]; then \
+	  sed -i "s/unstable/$(PKG_OS)/" $(SRCDIR)/debian/changelog; \
+        fi
 	cat $(SRCDIR)/debian/changelog.orig >> $(SRCDIR)/debian/changelog
 	$(RM) $(SRCDIR)/debian/changelog.orig
 
@@ -262,7 +266,6 @@ build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
 	$(MAKE) patch-debian-changelog
 	$(MAKE) patch-debian-files
 	$(MAKE) patch-debian-concurrency
-	export DEB_BUILD_OPTIONS=nocheck && \
 	cd $(SRCDIR) && dpkg-buildpackage -b -Jauto -uc -d
 	# upload new artifacts
 
@@ -274,40 +277,3 @@ clean:
 .PHONY: default build clean
 .PHONY: patch-debian-changelog patch-debian-files patch-debian-concurrency
 .PHONY: patch-debian-patches
-
-################################################################
-# Copy GitHub repository to /tmp and build the package in /tmp
-# Quilt won't patch special files, so using lndir in place of copy won't work.
-
-WKDIR = /tmp/debian
-REPO = ../../..
-
-github:
-	$(RM) -r $(WKDIR)
-	mkdir -p $(WKDIR)
-	cp -r $(REPO) $(WKDIR)/$(SRCDIR)
-	cp Makefile $(WKDIR)
-	cp changelog $(WKDIR)
-	cp surefire $(WKDIR)
-	cd $(WKDIR) && make GITHUB=1 && make -C $(SRCDIR)/src clean
-
-tarball:
-	$(RM) -r $(WKDIR)
-	mkdir -p $(WKDIR)
-	cp Makefile $(WKDIR)
-	cp changelog $(WKDIR)
-	cp surefire $(WKDIR)
-	cd $(WKDIR) && make GITHUB= && make -C $(SRCDIR)/src clean
-
-dump-config:
-	@ echo CBMC_NAME = $(CBMC_NAME)
-	@ echo CBMC_VERSION = $(CBMC_VERSION)
-	@ echo STABLE = $(STABLE)
-	@ echo GITHUB = $(GITHUB)
-	@ echo PKG_NAME = $(PKG_NAME)
-	@ echo PKG_VERSION = $(PKG_VERSION)
-	@ echo PKG_OS = $(PKG_OS)
-	@ echo DEBIAN_BASE = $(DEBIAN_BASE)
-	@ echo SRCDIR = $(SRCDIR)
-
-.PHONY: github tarball dump-config
