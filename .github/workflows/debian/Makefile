@@ -180,7 +180,7 @@ patch-debian-changelog:
 	echo Updated NEW_VERSION=$${NEW_VERSION} && \
 	mv $(SRCDIR)/debian/changelog $(SRCDIR)/debian/changelog.orig && \
 	cp changelog $(SRCDIR)/debian/changelog && \
-	sed -i "s/#VERSION#/$${NEW_VERSION}~$(PKG_OS)10/" $(SRCDIR)/debian/changelog
+	sed -i "s/#VERSION#/$${NEW_VERSION}~$(PKG_OS)/" $(SRCDIR)/debian/changelog
 	sed -i "s/#DATE#/`date -R`/" $(SRCDIR)/debian/changelog
 	cat $(SRCDIR)/debian/changelog.orig >> $(SRCDIR)/debian/changelog
 	$(RM) $(SRCDIR)/debian/changelog.orig
@@ -210,23 +210,32 @@ endif
 	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
 	  fi ; \
 	fi
-	# Patch maven plug-in version
-	PLUGIN_VERSION=`dpkg -l libmaven-compiler-plugin-java | tail -n1 | awk '{print $$3}' | cut -f1 -d-` ; \
-	sed -i "s/^\(+[[:space:]]*<version>\).*<\/version>/\1$$PLUGIN_VERSION<\/version>/" \
-	  $(SRCDIR)/debian/patches/maven*
 
-# Use quilt to update the patch files.
+# Update the debian path files.
 # Changes in the source code may cause old patches to apply only with
 # fuzz, and Debian package building does not allow fuzz.
 patch-debian-patches: $(SRCDIR)/debian
 
-	# Patch xenial maven plug-in patch, it deleted <version> without replacing it.
+	# Repair the maven patch on xenial: Add back the version number the patch deletes
 	if [ "$(PKG_OS)" = "xenial" ] ; then \
 	  sed -i "s/@@ -32,7 +32,6 @@/@@ -32,7 +32,7 @@/" $(SRCDIR)/debian/patches/maven* && \
 	  sed -i "/^-[[:space:]]*<version>.*<\/version>/ a + <version>VERSION<\/version>" \
 	    $(SRCDIR)/debian/patches/maven* ; \
 	fi
 
+	# Repair the maven patch: update the version number
+	PLUGIN_VERSION=`dpkg -l libmaven-compiler-plugin-java | tail -n1 | awk '{print $$3}' | cut -f1 -d-` && \
+	sed -i "s/^\(+[[:space:]]*<version>\).*<\/version>/\1$$PLUGIN_VERSION<\/version>/" \
+	  $(SRCDIR)/debian/patches/maven*
+
+	# Add a surefire patch to supply a version number
+	cp surefire $(SRCDIR)/debian/patches
+	echo "surefire" >> $(SRCDIR)/debian/patches/series
+	SUREFIRE_VERSION=`dpkg -l libsurefire-java | tail -n1 | awk '{print $$3}' | cut -f1 -d-` && \
+	sed -i "s/<version>SUREFIRE<\/version>/<version>$$SUREFIRE_VERSION<\/version>/" \
+	  $(SRCDIR)/debian/patches/surefire
+
+	# Refresh all patches with quilt
 	sudo apt-get -y install quilt
 	cd $(SRCDIR) && export QUILT_PATCHES=debian/patches && \
 		while quilt push; do quilt refresh; done && quilt pop -a
@@ -279,6 +288,7 @@ github:
 	cp -r $(REPO) $(WKDIR)/$(SRCDIR)
 	cp Makefile $(WKDIR)
 	cp changelog $(WKDIR)
+	cp surefire $(WKDIR)
 	cd $(WKDIR) && make GITHUB=1 && make -C $(SRCDIR)/src clean
 
 tarball:
@@ -286,6 +296,7 @@ tarball:
 	mkdir -p $(WKDIR)
 	cp Makefile $(WKDIR)
 	cp changelog $(WKDIR)
+	cp surefire $(WKDIR)
 	cd $(WKDIR) && make GITHUB= && make -C $(SRCDIR)/src clean
 
 dump-config:
