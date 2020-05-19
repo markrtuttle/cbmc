@@ -75,7 +75,7 @@ jobs:
       TIME: ${{needs.Tags.outputs.time}}
       SHA: ${{needs.Tags.outputs.sha}}
 
-      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~xenial.tar.gz
+      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~xenial_amd64.deb
       ARTIFACT_STABLE_NAME: Ubuntu16 cbmc ${{needs.Tags.outputs.pkg_version}} xenial ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}} ${{needs.Tags.outputs.runid}}
 
       SCRIPT_DIR: .github/workflows/debian
@@ -115,7 +115,7 @@ jobs:
       TIME: ${{needs.Tags.outputs.time}}
       SHA: ${{needs.Tags.outputs.sha}}
 
-      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~xenial.tar.gz
+      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~xenial_amd64.deb
       ARTIFACT_LATEST_NAME: Ubuntu16 cbmc-latest ${{needs.Tags.outputs.pkg_version}} xenial ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}} ${{needs.Tags.outputs.runid}}
 
       SCRIPT_DIR: .github/workflows/debian
@@ -150,8 +150,8 @@ jobs:
     runs-on: ubuntu-16.04
     needs: Tags
     env:
-      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~xenial.tar.gz
-      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~xenial.tar.gz
+      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~xenial_amd64.deb
+      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~xenial_amd64.deb
 
       ARTIFACT_STABLE_NAME: Ubuntu16 cbmc ${{needs.Tags.outputs.pkg_version}} xenial ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}} ${{needs.Tags.outputs.runid}}
       ARTIFACT_LATEST_NAME: Ubuntu16 cbmc-latest ${{needs.Tags.outputs.pkg_version}} xenial ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}} ${{needs.Tags.outputs.runid}}
@@ -193,8 +193,8 @@ jobs:
     runs-on: ubuntu-18.04
     needs: Tags
     env:
-      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~bionic.tar.gz
-      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~bionic.tar.gz
+      PACKAGE_STABLE_NAME: cbmc_${{needs.Tags.outputs.pkg_version}}~bionic_amd64.deb
+      PACKAGE_LATEST_NAME: cbmc-latest_${{needs.Tags.outputs.pkg_version}}~bionic_amd64.deb
 
       ARTIFACT_STABLE_NAME: Ubuntu18 cbmc ${{needs.Tags.outputs.pkg_version}} bionic ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}} ${{needs.Tags.outputs.runid}}
       ARTIFACT_LATEST_NAME: Ubuntu18 cbmc-latest ${{needs.Tags.outputs.pkg_version}} bionic ${{needs.Tags.outputs.time}} ${{needs.Tags.outputs.sha}} ${{needs.Tags.outputs.runid}}
@@ -304,9 +304,6 @@ jobs:
 
       - name: Install bison and flex
         run: ${{env.SCRIPT_DIR}}\install-bison.bat
-
-      - name: Patch cbmc
-        run: ${{env.SCRIPT_DIR}}\patch-cbmc.bat
 
       - name: Build cbmc
         run: ${{env.SCRIPT_DIR}}\build-cbmc.bat
