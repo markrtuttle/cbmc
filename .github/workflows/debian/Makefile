@@ -209,14 +209,12 @@ endif
 	# Patch debhelper version
 	DEBHELPER_VERSION=`dpkg -l debhelper | tail -n1 | awk '{print $$3}' | cut -f1 -d.` && \
 	echo Found debhelper version $$DEBHELPER_VERSION && \
-	if [ $$DEBHELPER_VERSION -lt 12 ] ; then \
-	  echo $$DEBHELPER_VERSION > $(SRCDIR)/debian/compat && \
-	  if [ $$DEBHELPER_VERSION -lt 10 ] ; then \
-	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
-	  fi  \
-	fi && \
-	sed -i "s/\(debhelper-compat *\)(= *[0-9]*)/\1 (= $$DEBHELPER_VERSION)/" \
-	  $(SRCDIR)/debian/control
+	if [ $$DEBHELPER_VERSION -lt 11 ] ; then \
+	  echo $$DEBHELPER_VERSION > $(SRCDIR)/debian/compat; \
+        fi && \
+	if [ $$DEBHELPER_VERSION -lt 10 ] ; then \
+	  sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
+	fi
 
 # Update the debian path files.
 # Changes in the source code may cause old patches to apply only with
