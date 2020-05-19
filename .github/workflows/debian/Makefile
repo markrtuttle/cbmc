@@ -51,7 +51,7 @@ endif
 
 #PKG_VERSION =
 
-PKG_OS = `grep UBUNTU_CODENAME /etc/os-release | cut -d= -f2`
+PKG_OS = `lsb_release -c | awk '{ print $$2 }'`
 
 # Debian packaging
 #
