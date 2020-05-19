@@ -65,7 +65,7 @@ jobs:
           echo PKG_VERSION = ${{ steps.version.outputs.pkg_version }}
 
   Ubuntu16_Stable:
-    name: Ubuntu 16 stable package
+    name: Ubuntu 16 cbmc package
     runs-on: ubuntu-16.04
     needs: Tags
     env:
@@ -98,14 +98,14 @@ jobs:
           ls /tmp
           mv /tmp/*.deb ${PACKAGE_STABLE_NAME}
 
-      - name: Upload the Debian package
+      - name: Upload the package
         uses: actions/upload-artifact@v1
         with:
           name: ${{ env.ARTIFACT_STABLE_NAME }}
           path: ${{ env.PACKAGE_STABLE_NAME }}
 
   Ubuntu16_Latest:
-    name: Ubuntu 16 latest package
+    name: Ubuntu 16 cbmc-latest package
     runs-on: ubuntu-16.04
     needs: Tags
     env:
@@ -139,14 +139,14 @@ jobs:
           ls /tmp
           mv /tmp/*.deb ${PACKAGE_LATEST_NAME}
 
-      - name: Upload the Debian package
+      - name: Upload the package
         uses: actions/upload-artifact@v1
         with:
           name: ${{ env.ARTIFACT_LATEST_NAME }}
           path: ${{ env.PACKAGE_LATEST_NAME }}
 
   Ubuntu18_Stable:
-    name: Ubuntu 18 stable package
+    name: Ubuntu 18 cbmc package
     runs-on: ubuntu-18.04
     needs: Tags
     env:
@@ -179,14 +179,14 @@ jobs:
           ls /tmp
           mv /tmp/*.deb ${PACKAGE_STABLE_NAME}
 
-      - name: Upload the Debian package
+      - name: Upload the package
         uses: actions/upload-artifact@v1
         with:
           name: ${{ env.ARTIFACT_STABLE_NAME }}
           path: ${{ env.PACKAGE_STABLE_NAME }}
 
   Ubuntu18_Latest:
-    name: Ubuntu 18 latest package
+    name: Ubuntu 18 cbmc-latest package
     runs-on: ubuntu-18.04
     needs: Tags
     env:
@@ -220,7 +220,7 @@ jobs:
           ls /tmp
           mv /tmp/*.deb ${PACKAGE_LATEST_NAME}
 
-      - name: Upload the Debian package
+      - name: Upload the package
         uses: actions/upload-artifact@v1
         with:
           name: ${{ env.ARTIFACT_LATEST_NAME }}
@@ -342,13 +342,13 @@ jobs:
           mv cbmc.tar.gz ${PACKAGE_STABLE_NAME}
           mv cbmc-latest.tar.gz ${PACKAGE_LATEST_NAME}
 
-      - name: Upload the stable package
+      - name: Upload the cbmc package
         uses: actions/upload-artifact@v1
         with:
           name: ${{env.ARTIFACT_STABLE_NAME}}
           path: ${{env.PACKAGE_STABLE_NAME}}
 
-      - name: Upload the latest package
+      - name: Upload the cbmc-latest package
         uses: actions/upload-artifact@v1
         with:
           name: ${{env.ARTIFACT_LATEST_NAME}}
@@ -397,13 +397,13 @@ jobs:
         run: |
            ${{env.SCRIPT_DIR}}\build-installer.bat cbmc-latest && move cbmc-latest.msi ${{env.PACKAGE_LATEST_NAME}}
 
-      - name: Upload the stable installer
+      - name: Upload the cbmc installer
         uses: actions/upload-artifact@v1
         with:
           name: ${{env.ARTIFACT_STABLE_NAME}}
           path: ${{env.PACKAGE_STABLE_NAME}}
 
-      - name: Upload the latest installer
+      - name: Upload the cbmc-latest installer
         uses: actions/upload-artifact@v1
         with:
           name: ${{env.ARTIFACT_LATEST_NAME}}
