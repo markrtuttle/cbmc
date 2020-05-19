@@ -215,7 +215,7 @@ endif
 	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
 	  fi  \
 	fi && \
-	sed -i "s/\(debhelper-compat *\)(= *[0-9]*),/\1 (= $$DEBHELPER_VERSION)/" \
+	sed -i "s/\(debhelper-compat *\)(= *[0-9]*)/\1 (= $$DEBHELPER_VERSION)/" \
 	  $(SRCDIR)/debian/control
 
 # Update the debian path files.
