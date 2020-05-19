@@ -212,7 +212,7 @@ endif
 	  echo $$DEBHELPER_VERSION > $(SRCDIR)/debian/compat && \
 	  if [ $$DEBHELPER_VERSION -lt 10 ] ; then \
 	    sed -i 's/^\tdh $$@/\tdh $$@ --parallel/' $(SRCDIR)/debian/rules ; \
-	  fi && \
+	  fi  \
 	fi &&
 	sed -i "s/\(debhelper-compat *\)(= *[0-9]*),/\1 (= $$DEBHELPER_VERSION)/" \
 	  $(SRCDIR)/debian/rules ; \
