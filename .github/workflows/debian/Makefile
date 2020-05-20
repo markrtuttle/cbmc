@@ -157,8 +157,6 @@ $(SRCDIR)/debian: $(SRCDIR)
 	cd $< && tar xJf ../debian.tar.xz
 	$(RM) debian.tar.xz
 
-
-
 # Update the debian changelog.
 patch-debian-changelog:
 	echo Found PKG_VERSION=$(PKG_VERSION)
