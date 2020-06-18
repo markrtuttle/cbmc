@@ -1,10 +1,12 @@
 name: CBMC Packages
 
-on:
-  # Build packages when new commits are pushed to develop
-  push:
-    branches:
-      - develop
+on: push
+
+#on:
+#  # Build packages when new commits are pushed to develop
+#  push:
+#    branches:
+#      - develop
 
 jobs:
   Tags:
