@@ -230,6 +230,13 @@ patch-debian-patches: $(SRCDIR)/debian
 	sed -i "s/^\(+[[:space:]]*<version>\).*<\/version>/\1$$PLUGIN_VERSION<\/version>/" \
 	  $(SRCDIR)/debian/patches/maven*
 
+	# Add a surefire patch to supply a version number
+	cp surefire $(SRCDIR)/debian/patches
+	echo "surefire" >> $(SRCDIR)/debian/patches/series
+	SUREFIRE_VERSION=`dpkg -l libsurefire-java | tail -n1 | awk '{print $$3}' | cut -f1 -d-` && \
+	sed -i "s/<version>SUREFIRE<\/version>/<version>$$SUREFIRE_VERSION<\/version>/" \
+	  $(SRCDIR)/debian/patches/surefire
+
 	# Patch 64bit_regression_tests patch
 	cd $(SRCDIR)/debian/patches && patch < ../../../64bit_regression_tests.patch
 

@@ -97,7 +97,7 @@ jobs:
       - name: Create the package
         run: |
           cp -r . /tmp/cbmc-${CBMC_VERSION}
-          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/surefire ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
           make -C /tmp GITHUB=1 STABLE=1 CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
           mv /tmp/*.deb ${PACKAGE_STABLE_NAME}
 
@@ -133,7 +133,7 @@ jobs:
       - name: Create the package
         run: |
           cp -r . /tmp/cbmc-${CBMC_VERSION}
-          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/surefire ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
           make -C /tmp GITHUB=1 STABLE= CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
           mv /tmp/*.deb ${PACKAGE_LATEST_NAME}
 
@@ -169,7 +169,7 @@ jobs:
       - name: Create the package
         run: |
           cp -r . /tmp/cbmc-${CBMC_VERSION}
-          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/surefire ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
           make -C /tmp GITHUB=1 STABLE=1 CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
           mv /tmp/*.deb ${PACKAGE_STABLE_NAME}
 
@@ -205,7 +205,7 @@ jobs:
       - name: Create the package
         run: |
           cp -r . /tmp/cbmc-${CBMC_VERSION}
-          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
+          cp ${SCRIPT_DIR}/Makefile ${SCRIPT_DIR}/changelog ${SCRIPT_DIR}/surefire ${SCRIPT_DIR}/64bit_regression_tests.patch /tmp
           make -C /tmp GITHUB=1 STABLE= CBMC_VERSION=${CBMC_VERSION} PKG_VERSION=${PKG_VERSION}
           mv /tmp/*.deb ${PACKAGE_LATEST_NAME}
 
