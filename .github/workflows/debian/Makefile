@@ -259,6 +259,12 @@ patch-debian-concurrency:
 ################################################################
 
 build: $(SRCDIR) $(SRCDIR)/debian $(SRCDIR)/java-models-library
+
+	# Add a mirror to backup the mirror azure.archive.ubuntu.com/ubuntu
+	# used by GitHub Actions and appears broken on 2020-07-10
+	sudo add-apt-repository http://us-east-1.ec2.archive.ubuntu.com/ubuntu
+	sudo apt-get update
+
 	sudo apt-get -y install \
 	  debhelper minisat zlib1g-dev flex bison default-jdk-headless \
 	  maven maven-repo-helper maven-debian-helper \
