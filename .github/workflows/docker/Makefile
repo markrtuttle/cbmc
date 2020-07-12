@@ -1,17 +1,26 @@
-# Call this makefile from the root of the cbmc repository
-# make -f $(DIR)/Makefile DIR=$(DIR)
+# Call this makefile from the root of the repository
+# make -f $(DOCKERPATH)/Makefile build
+# make -f $(DOCKERPATH)/Makefile push
 
-TAG ?= cbmc
+ACCT ?= markrtuttle
+REPO ?= viewer
+VER ?= latest
 
 ROOT ?= ../../..
-DOCKER ?= .github/workflows/docker
+DOCKERPATH ?= .github/workflows/docker
+DOCKERFILE ?= Dockerfile
 
+TAG1 ?= $(ACCT)/$(REPO):$(VER)
+TAG2 ?= $(ACCT)/$(REPO):latest
 
 default:
-	cd $(ROOT) && docker build --tag $(TAG) --file $(DOCKER)/Dockerfile .
+	@echo Nothing to do for default.
 
+build:
+	cd $(ROOT) \
+	  && docker build --tag $(TAG1) --file $(DOCKERPATH)/$(DOCKERFILE) .
+	docker tag $(TAG1) $(TAG2)
 
-# tag with version
-# push to docker hub
-
-# make tools
+push:
+	docker push $(TAG1)
+	docker push $(TAG2)
