@@ -11,10 +11,7 @@ env:
   ACCT: markrtuttle
 
   # $REPO is a DockerHub repository
-  REPO: cbmc
-
-  # $TOOLS is the list of DockerHub tool repositories
-  TOOLS: cbmc viewer
+  REPO: cbmc-binaries
 
   # $GITHUB_REF = /refs/tags/docker-N.M where N.M is the version number
   # $TAG_PREFIX is the prefix of $GITHUB_REF preceding the version number

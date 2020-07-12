@@ -57,7 +57,7 @@ ENV CBMC_STAGING=/tmp/cbmc-staging
 ENV CBMC_INSTALL=/
 
 ENV PATH="/usr/local/bin:/usr/local/cbmc-viewer:${PATH}"
-ENV PS1="cbmc:\w "
+ENV PS1="CBMC:\w "
 
 RUN echo PS1=\"${PS1}\" >> /root/.bashrc
 
