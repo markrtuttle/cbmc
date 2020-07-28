@@ -62,12 +62,16 @@ ENV PS1="CBMC:\w "
 RUN echo PS1=\"${PS1}\" >> /root/.bashrc
 
 # runtime dependencies
+#   git required: prepare.py uses git apply to patch source tree before proof
+#   libc6-dev-i386 required: some projects build 32-bit goto binaries
 ENV DEBIAN_FRONTEND="noninteractive"
 ENV TZ="America/New_York"
 RUN \
   apt update && apt install -y \
     cmake \
     g++ \
+    git \
+    libc6-dev-i386 \
     make \
     ninja-build \
     python-is-python3 \
