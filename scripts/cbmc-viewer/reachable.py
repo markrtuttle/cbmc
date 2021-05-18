@@ -50,7 +50,7 @@ class Reachable:
 
         for function in json.loads(jsn):
             funcname = function['function']
-            filename = function['file name']
+            filename = function['file']
             filename = srcloc.clean_path(filename)
 
             # Declare as reachable functions only those functions in
